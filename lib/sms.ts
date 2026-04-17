@@ -107,7 +107,7 @@ export function buildSubmissionMessage(
   c: Pick<Candidate, 'full_name' | 'surname' | 'total_score'>,
 ): string {
   const name = candidateDisplayName(c)
-  return `Dear ${name}, your pastoral appointment score is ${c.total_score}/1350.`
+  return `Dear ${name}, your pastoral appointment score is ${c.total_score}. - First Love Church`
 }
 
 export function buildStatusChangeMessage(

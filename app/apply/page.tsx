@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { OVERSIGHT_OPTIONS, OVERSIGHT_AREA_OPTIONS } from '@/lib/types'
 import { isValidGhanaPhone } from '@/lib/sms'
@@ -55,6 +55,8 @@ const defaultValues: CandidateInput = {
   communicates_with_mothers: false,
   communicates_with_bishops: false,
   interest_in_church_activities: false,
+
+  photo_url: null,
 }
 
 const SECTIONS = [
@@ -67,6 +69,107 @@ const SECTIONS = [
   { label: 'Category G', cat: 'Pineapple Patch' },
   { label: 'Review', cat: 'Submit' },
 ]
+
+function PhotoUpload({ value, onChange, firstName, surname }: {
+  value: string | null
+  onChange: (url: string) => void
+  firstName: string
+  surname: string
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [preview, setPreview] = useState<string | null>(value)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+
+  async function handleFile(file: File) {
+    setUploadError('')
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setUploadError('Only JPEG, PNG, or WebP images are allowed.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Photo must be smaller than 5 MB.')
+      return
+    }
+    setUploading(true)
+    try {
+      const name = `${firstName} ${surname}`.trim()
+      const res = await fetch(`/api/upload/photo?type=${encodeURIComponent(file.type)}&size=${file.size}&name=${encodeURIComponent(name)}`)
+      if (!res.ok) {
+        const body = await res.json()
+        throw new Error(body.error ?? 'Failed to get upload URL')
+      }
+      const { uploadUrl, key } = await res.json()
+      const put = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      })
+      if (!put.ok) throw new Error('Upload to storage failed')
+      setPreview(URL.createObjectURL(file))
+      onChange(key)
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <label className="block text-sm font-semibold text-gray-700">
+        Passport Photo <span className="text-red-500">*</span>
+      </label>
+
+      {/* Example + requirements */}
+      <div className="flex gap-4 items-start rounded-xl border border-blue-100 bg-blue-50 p-3">
+        <img
+          src="/passport-photo-example.svg"
+          alt="Example passport photo"
+          className="w-16 h-20 rounded border border-gray-200 shadow-sm shrink-0 bg-white"
+        />
+        <div className="text-xs text-blue-800 space-y-1">
+          <p className="font-semibold text-sm">Photo requirements</p>
+          <ul className="space-y-0.5 list-none">
+            <li>✓ Plain <strong>white background</strong></li>
+            <li>✓ Full face clearly visible, looking forward</li>
+            <li>✓ No sunglasses or headwear (unless religious)</li>
+            <li>✓ Recent photo</li>
+            <li>✓ JPEG, PNG or WebP · max 5 MB</li>
+          </ul>
+        </div>
+      </div>
+
+      <div
+        className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 cursor-pointer hover:border-blue-400 transition-colors"
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
+      >
+        {preview ? (
+          <img src={preview} alt="Passport photo preview" className="w-32 h-32 object-cover rounded-lg border border-gray-200 shadow-sm" />
+        ) : (
+          <div className="w-32 h-32 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+        )}
+        <span className="text-sm text-blue-700 font-medium">
+          {uploading ? 'Uploading…' : preview ? 'Change photo' : 'Choose or drop photo'}
+        </span>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+      />
+      {uploadError && <p className="text-red-600 text-xs">{uploadError}</p>}
+    </div>
+  )
+}
 
 function YesNo({
   label,
@@ -176,6 +279,7 @@ export default function ApplyPage() {
       if (!form.oversight_area) return 'Please select your oversight area'
       if (!form.phone_number?.trim()) return 'Please enter your phone number'
       if (!isValidGhanaPhone(form.phone_number)) return 'Please enter a valid Ghana phone number (e.g. 0241234567)'
+      if (!form.photo_url) return 'Please upload your passport photo'
     }
     return null
   }
@@ -327,6 +431,13 @@ export default function ApplyPage() {
                 />
               </div>
             </div>
+
+            <PhotoUpload
+              value={form.photo_url}
+              onChange={(url) => set('photo_url', url)}
+              firstName={form.full_name}
+              surname={form.surname}
+            />
           </div>
         )}
 

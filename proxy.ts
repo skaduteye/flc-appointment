@@ -1,9 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next({
-    request: { headers: request.headers },
+    request: {
+      headers: new Headers({
+        ...Object.fromEntries(request.headers),
+        'x-pathname': request.nextUrl.pathname,
+      }),
+    },
   })
 
   const supabase = createServerClient(

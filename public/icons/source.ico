@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="./favicons/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicons/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicons/apple-touch-icon.png" />
+    <link rel="manifest" href="./favicons/site.webmanifest" type="application/manifest+json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HE4CVLW1G4"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-HE4CVLW1G4');
+    </script>
+    <title>First Love Church - A Global Vibrant Youth Church Full of First Love for the Lord</title>
+    <meta name="description" content="The First Love Church stands as the largest charismatic megachurch in Accra, Ghana, pastored by Prophet Dag Heward-Mills, one of Africa's most prominent spiritual leaders." />
+    <meta property="og:title" content="First Love Church - A Global Vibrant Youth Church Full of First Love for the Lord" />
+    <meta property="og:description" content="The First Love Church stands as the largest charismatic megachurch in Accra, Ghana, pastored by Prophet Dag Heward-Mills, one of Africa's most prominent spiritual leaders." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="First Love Church - A Global Vibrant Youth Church Full of First Love for the Lord" />
+    <meta name="twitter:description" content="The First Love Church stands as the largest charismatic megachurch in Accra, Ghana, pastored by Prophet Dag Heward-Mills, one of Africa's most prominent spiritual leaders." />
+    <script type="module" crossorigin src="./assets/index-DCwH6uHG.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Db6z7u7w.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

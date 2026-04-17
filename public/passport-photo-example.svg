@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200" width="160" height="200">
+  <!-- White background -->
+  <rect width="160" height="200" fill="#ffffff" rx="4"/>
+  <!-- Subtle border -->
+  <rect width="160" height="200" fill="none" stroke="#d1d5db" stroke-width="2" rx="4"/>
+
+  <!-- Head (circle) -->
+  <circle cx="80" cy="72" r="32" fill="#9ca3af"/>
+
+  <!-- Shoulders / body -->
+  <ellipse cx="80" cy="168" rx="52" ry="36" fill="#9ca3af"/>
+
+  <!-- White background peek behind head (makes it look like a real passport photo space) -->
+  <!-- inner white to separate head from body slightly -->
+
+  <!-- "WHITE BG" label at bottom -->
+  <rect x="10" y="178" width="140" height="16" rx="3" fill="#f0fdf4"/>
+  <text x="80" y="190" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#16a34a" text-anchor="middle">✓ White background</text>
+</svg>

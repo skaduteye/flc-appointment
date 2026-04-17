@@ -109,13 +109,15 @@ export default function DashboardPage() {
 
       {/* Recent submissions */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+        <div className="flex justify-between items-center px-4 sm:px-6 py-4 border-b border-gray-100">
           <h2 className="font-semibold text-gray-900">Recent Submissions</h2>
           <Link href="/admin/candidates" className="text-sm text-blue-700 hover:underline">
             View all
           </Link>
         </div>
-        <table className="w-full text-sm">
+
+        {/* Desktop table */}
+        <table className="hidden sm:table w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
               <th className="px-6 py-3 text-left">Name</th>
@@ -151,6 +153,29 @@ export default function DashboardPage() {
             )}
           </tbody>
         </table>
+
+        {/* Mobile card list */}
+        <div className="sm:hidden divide-y divide-gray-100">
+          {recent.length === 0 && (
+            <p className="px-4 py-8 text-center text-gray-400 text-sm">No candidates yet</p>
+          )}
+          {recent.map((c) => (
+            <Link key={c.id} href={`/admin/candidates/${c.id}`} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
+              <div className="min-w-0">
+                <p className="font-medium text-gray-900 text-sm truncate">{c.full_name}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(c.status)}`}>
+                    {c.status.replace('_', ' ')}
+                  </span>
+                  {c.is_disqualified && (
+                    <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">FLAGGED</span>
+                  )}
+                </div>
+              </div>
+              <span className="font-bold text-gray-900 text-sm ml-3 shrink-0">{c.total_score}</span>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   )

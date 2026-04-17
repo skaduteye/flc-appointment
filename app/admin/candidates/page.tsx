@@ -92,8 +92,8 @@ export default function CandidatesPage() {
         </select>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+      {/* Table — desktop */}
+      <div className="hidden sm:block bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
@@ -141,6 +141,37 @@ export default function CandidatesPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Card list — mobile */}
+      <div className="sm:hidden space-y-2">
+        {loading && <p className="text-center text-gray-400 text-sm py-8">Loading…</p>}
+        {!loading && candidates.length === 0 && (
+          <p className="text-center text-gray-400 text-sm py-8">No candidates found</p>
+        )}
+        {candidates.map((c) => (
+          <Link
+            key={c.id}
+            href={`/admin/candidates/${c.id}`}
+            className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm"
+          >
+            <div className="min-w-0">
+              <p className="font-medium text-gray-900 text-sm truncate">{c.full_name}</p>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(c.status)}`}>
+                  {c.status.replace('_', ' ')}
+                </span>
+                {c.is_disqualified && (
+                  <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">FLAGGED</span>
+                )}
+                <span className="text-xs text-gray-400">{formatDate(c.created_at)}</span>
+              </div>
+            </div>
+            <span className={`font-bold text-base ml-3 shrink-0 ${scoreColor(c.total_score, c.is_disqualified)}`}>
+              {c.total_score}
+            </span>
+          </Link>
+        ))}
       </div>
 
       {/* Pagination */}

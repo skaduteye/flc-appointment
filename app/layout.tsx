@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -15,6 +15,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "UO-FLC Pastoral Appointment Portal",
   description: "First Love Church – Pastoral Appointment Point Evaluation System",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "FLC Appoint",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#172554",
 };
 
 export default function RootLayout({

@@ -16,9 +16,9 @@ function Row({ label, value }: { label: string; value: string | number | boolean
       ? '—'
       : String(value)
   return (
-    <div className="flex justify-between items-center py-2.5 border-b border-gray-100 last:border-0 text-sm">
-      <span className="text-gray-500 max-w-xs">{label}</span>
-      <span className={`font-medium ${typeof value === 'boolean' && value ? 'text-blue-700' : 'text-gray-900'}`}>
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2.5 border-b border-gray-100 last:border-0 text-sm gap-0.5 sm:gap-4">
+      <span className="text-gray-500">{label}</span>
+      <span className={`font-medium sm:text-right ${typeof value === 'boolean' && value ? 'text-blue-700' : 'text-gray-900'}`}>
         {display}
       </span>
     </div>
@@ -86,14 +86,29 @@ export default function CandidateDetailPage() {
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <button onClick={() => router.back()} className="text-blue-700 text-sm hover:underline mb-2 block">
-            ← Back
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900">{candidate.full_name}</h1>
-          <p className="text-gray-400 text-xs mt-1">Submitted {formatDate(candidate.created_at)}</p>
+        <div className="flex items-start gap-4">
+          {candidate.photo_url ? (
+            <img
+              src={`/api/photos/${candidate.photo_url}`}
+              alt={`${candidate.full_name} passport photo`}
+              className="w-20 h-20 rounded-xl object-cover border border-gray-200 shadow-sm shrink-0"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-300 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+          )}
+          <div>
+            <button onClick={() => router.back()} className="text-blue-700 text-sm hover:underline mb-2 block">
+              ← Back
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">{candidate.full_name}</h1>
+            <p className="text-gray-400 text-xs mt-1">Submitted {formatDate(candidate.created_at)}</p>
+          </div>
         </div>
-        <div className={`text-center rounded-xl px-6 py-3 border-2 ${isDisqualified ? 'bg-red-50 border-red-300' : 'bg-blue-50 border-blue-200'}`}>
+        <div className={`text-center rounded-xl px-4 py-3 border-2 shrink-0 ${isDisqualified ? 'bg-red-50 border-red-300' : 'bg-blue-50 border-blue-200'}`}>
           <div className={`text-4xl font-bold ${isDisqualified ? 'text-red-600' : 'text-blue-700'}`}>
             {candidate.total_score}
           </div>
@@ -112,9 +127,9 @@ export default function CandidateDetailPage() {
           { label: 'Cat E — Servants Armed & Trained', value: breakdown.equipped, max: 140 },
           { label: 'Cat G — Pineapple Patch', value: breakdown.pineapple, max: 480 },
         ].map(({ label, value, max }) => (
-          <div key={label} className="flex justify-between items-center py-2.5 border-b border-gray-100 last:border-0 text-sm">
+          <div key={label} className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2.5 border-b border-gray-100 last:border-0 text-sm gap-0.5">
             <span className="text-gray-600">{label}</span>
-            <span className={`font-semibold ${value < 0 ? 'text-red-600' : value > 0 ? 'text-green-700' : 'text-gray-400'}`}>
+            <span className={`font-semibold sm:text-right ${value < 0 ? 'text-red-600' : value > 0 ? 'text-green-700' : 'text-gray-400'}`}>
               {value > 0 ? '+' : ''}{value}{max > 0 ? ` / ${max}` : ''}
             </span>
           </div>
@@ -138,6 +153,18 @@ export default function CandidateDetailPage() {
         <Row label="Oversight" value={candidate.oversight} />
         <Row label="Oversight area" value={candidate.oversight_area} />
         <Row label="SMS sent at" value={candidate.sms_sent_at ? new Date(candidate.sms_sent_at).toLocaleString() : null} />
+        {candidate.photo_url && (
+          <div className="py-2.5 border-b border-gray-100 last:border-0 text-sm">
+            <p className="text-gray-500 mb-2">Passport Photo</p>
+            <a href={`/api/photos/${candidate.photo_url}`} target="_blank" rel="noopener noreferrer">
+              <img
+                src={`/api/photos/${candidate.photo_url}`}
+                alt="Passport photo"
+                className="w-28 h-28 object-cover rounded-lg border border-gray-200 shadow-sm hover:opacity-90 transition-opacity"
+              />
+            </a>
+          </div>
+        )}
       </Section>
 
       {/* Category A */}

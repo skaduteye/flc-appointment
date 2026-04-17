@@ -90,6 +90,9 @@ export interface Candidate {
   communicates_with_bishops: boolean
   interest_in_church_activities: boolean
 
+  // Photo
+  photo_url: string | null
+
   // Computed / admin
   total_score: number
   is_disqualified: boolean
