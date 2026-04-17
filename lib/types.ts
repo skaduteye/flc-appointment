@@ -37,6 +37,11 @@ export interface Candidate {
   gender: 'MALE' | 'FEMALE' | null
   oversight: string | null
   oversight_area: string | null
+  phone_number: string | null
+
+  // SMS tracking
+  sms_sent_at: string | null
+  sms_message_id: string | null
 
   // Category A — Strong Christian Status
   is_born_again: boolean
@@ -95,7 +100,8 @@ export interface Candidate {
 }
 
 export type CandidateInput = Omit<Candidate,
-  'id' | 'created_at' | 'updated_at' | 'total_score' | 'is_disqualified' | 'status' | 'admin_notes' | 'sheet_row_id' | 'last_synced_at'
+  'id' | 'created_at' | 'updated_at' | 'total_score' | 'is_disqualified' | 'status' | 'admin_notes' |
+  'sheet_row_id' | 'last_synced_at' | 'sms_sent_at' | 'sms_message_id'
 > & { sheet_row_id?: string | null }
 
 export interface ScoreBreakdown {

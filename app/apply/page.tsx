@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { calculateScore, SCORE_THRESHOLD } from '@/lib/scoring'
 import { OVERSIGHT_OPTIONS, OVERSIGHT_AREA_OPTIONS } from '@/lib/types'
+import { isValidGhanaPhone } from '@/lib/sms'
 import type { CandidateInput } from '@/lib/types'
 
 const defaultValues: CandidateInput = {
@@ -13,6 +14,7 @@ const defaultValues: CandidateInput = {
   gender: null,
   oversight: null,
   oversight_area: null,
+  phone_number: '',
 
   is_born_again: false,
   speaks_in_tongues: false,
@@ -185,6 +187,8 @@ export default function ApplyPage() {
       if (!form.gender) return 'Please select your gender'
       if (!form.oversight) return 'Please select your oversight'
       if (!form.oversight_area) return 'Please select your oversight area'
+      if (!form.phone_number?.trim()) return 'Please enter your phone number'
+      if (!isValidGhanaPhone(form.phone_number)) return 'Please enter a valid Ghana phone number (e.g. 0241234567)'
     }
     return null
   }
@@ -322,6 +326,28 @@ export default function ApplyPage() {
                   <option key={a} value={a}>{a}</option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Phone Number <span className="text-red-500">*</span>
+              </label>
+              <p className="text-xs text-gray-500 mb-1">
+                Ghana number — you will receive an SMS confirmation with your score
+              </p>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-500 text-sm">
+                  +233
+                </span>
+                <input
+                  type="tel"
+                  value={form.phone_number?.replace(/^(\+233|233)/, '0') ?? ''}
+                  onChange={(e) => set('phone_number', e.target.value)}
+                  placeholder="0241234567"
+                  maxLength={10}
+                  className="flex-1 rounded-r-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
           </div>
         )}

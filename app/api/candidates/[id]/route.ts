@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { calculateScore } from '@/lib/scoring'
-import type { CandidateInput } from '@/lib/types'
+import { sendSms, buildStatusChangeMessage, isValidGhanaPhone } from '@/lib/sms'
+import type { CandidateInput, CandidateStatus } from '@/lib/types'
 
 function getAdminClient() {
   return createClient(
@@ -67,6 +68,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Send SMS if status changed to a notifiable value
+  const newStatus = updates.status as CandidateStatus | undefined
+  const prevStatus = (await supabase.from('candidates').select('status').eq('id', id).single())?.data?.status
+  if (
+    newStatus &&
+    newStatus !== prevStatus &&
+    data.phone_number &&
+    isValidGhanaPhone(data.phone_number)
+  ) {
+    const msg = buildStatusChangeMessage(data, newStatus)
+    if (msg) {
+      void sendSms([data.phone_number], msg, `Status: ${newStatus}`).catch((e) =>
+        console.error('Status SMS failed:', e)
+      )
+    }
+  }
+
   return NextResponse.json(data)
 }
 

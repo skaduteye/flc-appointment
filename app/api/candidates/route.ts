@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { calculateScore } from '@/lib/scoring'
-import type { CandidateInput } from '@/lib/types'
+import { calculateScore, SCORE_THRESHOLD } from '@/lib/scoring'
+import {
+  sendSms,
+  buildSubmissionMessage,
+  buildAdminAlertMessage,
+  isValidGhanaPhone,
+} from '@/lib/sms'
+import type { CandidateInput, CandidateStatus } from '@/lib/types'
 
 function getAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
+}
+
+function resolveAutoStatus(total: number, isDisqualified: boolean): CandidateStatus {
+  if (isDisqualified) return 'under_review' // flagged — needs manual review
+  if (total >= SCORE_THRESHOLD) return 'under_review'
+  return 'rejected'
 }
 
 // POST /api/candidates — public submission
@@ -24,12 +36,18 @@ export async function POST(req: NextRequest) {
   }
 
   const { total, isDisqualified } = calculateScore(body)
+  const autoStatus = resolveAutoStatus(total, isDisqualified)
 
   const supabase = getAdminClient()
   const { data, error } = await supabase
     .from('candidates')
-    .insert({ ...body, total_score: total, is_disqualified: isDisqualified })
-    .select('id')
+    .insert({
+      ...body,
+      total_score: total,
+      is_disqualified: isDisqualified,
+      status: autoStatus,
+    })
+    .select('*')
     .single()
 
   if (error) {
@@ -37,7 +55,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to save candidate' }, { status: 500 })
   }
 
+  // Fire SMS notifications — non-blocking, errors logged but not surfaced
+  void sendNotifications(data, autoStatus)
+
   return NextResponse.json({ id: data.id }, { status: 201 })
+}
+
+async function sendNotifications(
+  candidate: { id: string; full_name: string; surname: string; total_score: number; is_disqualified: boolean; phone_number: string | null },
+  autoStatus: CandidateStatus,
+) {
+  const supabase = getAdminClient()
+  const updates: Record<string, unknown> = {}
+
+  // 1. Candidate confirmation SMS
+  if (candidate.phone_number && isValidGhanaPhone(candidate.phone_number)) {
+    const msg = buildSubmissionMessage(candidate)
+    const result = await sendSms([candidate.phone_number], msg, 'Appointment Confirmation')
+    if (result.success) {
+      updates.sms_sent_at = new Date().toISOString()
+      updates.sms_message_id = result.messageId
+    } else {
+      console.error('Candidate SMS failed:', result.error)
+    }
+  }
+
+  // 2. Admin alert SMS
+  const adminPhone = process.env.ADMIN_PHONE_NUMBER
+  if (adminPhone) {
+    const msg = buildAdminAlertMessage(candidate, autoStatus)
+    const result = await sendSms([adminPhone], msg, 'Admin New Application')
+    if (!result.success) console.error('Admin SMS failed:', result.error)
+  }
+
+  // Save SMS tracking back to DB if we have updates
+  if (Object.keys(updates).length > 0) {
+    await supabase.from('candidates').update(updates).eq('id', candidate.id)
+  }
 }
 
 // GET /api/candidates — admin only, list with filters

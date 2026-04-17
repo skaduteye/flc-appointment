@@ -134,8 +134,10 @@ export default function CandidateDetailPage() {
         <Row label="Surname(s)" value={candidate.surname} />
         <Row label="Date of birth" value={candidate.date_of_birth} />
         <Row label="Gender" value={candidate.gender} />
+        <Row label="Phone number" value={candidate.phone_number} />
         <Row label="Oversight" value={candidate.oversight} />
         <Row label="Oversight area" value={candidate.oversight_area} />
+        <Row label="SMS sent at" value={candidate.sms_sent_at ? new Date(candidate.sms_sent_at).toLocaleString() : null} />
       </Section>
 
       {/* Category A */}

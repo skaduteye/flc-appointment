@@ -10,6 +10,7 @@ interface SyncStatus {
 
 export default function SyncPage() {
   const [status, setStatus] = useState<SyncStatus | null>(null)
+  const [smsBalance, setSmsBalance] = useState<number | null>(null)
   const [importing, setImporting] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [result, setResult] = useState<string | null>(null)
@@ -21,7 +22,18 @@ export default function SyncPage() {
     setStatus(data)
   }
 
-  useEffect(() => { fetchStatus() }, [])
+  async function fetchSmsBalance() {
+    try {
+      const res = await fetch('/api/sms/balance')
+      const data = await res.json()
+      if (data.balance !== undefined) setSmsBalance(data.balance)
+    } catch { /* silently ignore if SMS not configured */ }
+  }
+
+  useEffect(() => {
+    fetchStatus()
+    fetchSmsBalance()
+  }, [])
 
   async function runImport() {
     setImporting(true)
@@ -69,7 +81,7 @@ export default function SyncPage() {
       {/* Status */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-3">
         <h2 className="font-semibold text-gray-800">Current Status</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div className="bg-gray-50 rounded-lg p-4 text-center">
             <div className="text-3xl font-bold text-gray-900">{status?.db_row_count ?? '—'}</div>
             <div className="text-gray-500 text-sm mt-1">Candidates in database</div>
@@ -79,6 +91,15 @@ export default function SyncPage() {
               {status?.last_synced_at ? formatDate(status.last_synced_at) : 'Never'}
             </div>
             <div className="text-gray-500 text-sm mt-1">Last synced</div>
+          </div>
+          <div className={`rounded-lg p-4 text-center ${smsBalance === null ? 'bg-gray-50' : smsBalance < 50 ? 'bg-red-50' : 'bg-green-50'}`}>
+            <div className={`text-3xl font-bold ${smsBalance === null ? 'text-gray-400' : smsBalance < 50 ? 'text-red-600' : 'text-green-700'}`}>
+              {smsBalance !== null ? smsBalance.toLocaleString() : '—'}
+            </div>
+            <div className="text-gray-500 text-sm mt-1">SMS credits</div>
+            {smsBalance !== null && smsBalance < 50 && (
+              <div className="text-red-600 text-xs mt-1 font-medium">Low balance</div>
+            )}
           </div>
         </div>
       </div>
