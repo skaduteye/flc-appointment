@@ -59,10 +59,14 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  if (totalSent === 0 && errors.length > 0) {
+    return NextResponse.json({ error: errors.join('; ') }, { status: 500 })
+  }
+
   return NextResponse.json({
     sent: totalSent,
     creditsUsed: totalCredits,
     total: phones.length,
-    errors: errors.length > 0 ? errors : undefined,
+    warnings: errors.length > 0 ? errors : undefined,
   })
 }

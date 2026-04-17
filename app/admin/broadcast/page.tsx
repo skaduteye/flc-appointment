@@ -19,7 +19,7 @@ export default function BroadcastPage() {
   const [message, setMessage] = useState('')
   const [campaignName, setCampaignName] = useState('')
   const [sending, setSending] = useState(false)
-  const [result, setResult] = useState<{ sent: number; creditsUsed: number; total: number } | null>(null)
+  const [result, setResult] = useState<{ sent: number; creditsUsed: number; total: number; warnings?: string[] } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [candidateCount, setCandidateCount] = useState<number | null>(null)
   const [confirmed, setConfirmed] = useState(false)
@@ -54,8 +54,11 @@ export default function BroadcastPage() {
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      if (!res.ok) throw new Error(data.error ?? 'Broadcast failed')
       setResult(data)
+      if (data.warnings?.length) {
+        setError(`Sent with warnings: ${data.warnings.join('; ')}`)
+      }
       setConfirmed(false)
       setMessage('')
       setCampaignName('')

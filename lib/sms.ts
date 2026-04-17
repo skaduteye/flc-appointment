@@ -56,7 +56,10 @@ export async function sendSms(
       }),
     })
     const json = await res.json()
-    if (!json.success) return { success: false, error: json.error }
+    if (!json.success) {
+      console.error('FlashSMS sendSms error:', JSON.stringify(json))
+      return { success: false, error: json.error ?? `HTTP ${res.status}` }
+    }
     return {
       success: true,
       messageId: json.data.messageId,

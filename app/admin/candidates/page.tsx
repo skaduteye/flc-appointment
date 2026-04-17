@@ -7,6 +7,40 @@ import { statusColor, scoreColor, formatDate } from '@/lib/utils'
 
 const STATUS_OPTIONS: (CandidateStatus | '')[] = ['', 'pending', 'under_review', 'approved', 'rejected']
 
+async function exportPDF(candidates: Candidate[], status: CandidateStatus | '') {
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ])
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+  doc.setFontSize(14)
+  doc.text(`FLC Candidates Report${status ? ` — ${status.replace('_', ' ')}` : ''}`, 14, 14)
+  doc.setFontSize(9)
+  doc.text(`Generated ${new Date().toLocaleString()}  •  ${candidates.length} records`, 14, 20)
+
+  autoTable(doc, {
+    startY: 25,
+    styles: { fontSize: 7, cellPadding: 1.5 },
+    headStyles: { fillColor: [23, 37, 84], textColor: 255 },
+    head: [['Name', 'Surname', 'Gender', 'Phone', 'Oversight', 'Score', 'Disq.', 'Status', 'Submitted']],
+    body: candidates.map((c) => [
+      c.full_name,
+      c.surname,
+      c.gender ?? '',
+      c.phone_number ?? '',
+      c.oversight ?? '',
+      c.total_score,
+      c.is_disqualified ? 'Yes' : 'No',
+      c.status.replace('_', ' '),
+      formatDate(c.created_at),
+    ]),
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+  })
+
+  const dateStr = new Date().toISOString().slice(0, 10)
+  doc.save(`candidates${status ? `-${status}` : ''}-${dateStr}.pdf`)
+}
+
 export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [total, setTotal] = useState(0)
@@ -16,6 +50,28 @@ export default function CandidatesPage() {
   const [sort, setSort] = useState('total_score')
   const [order, setOrder] = useState('desc')
   const [page, setPage] = useState(1)
+  const [exporting, setExporting] = useState<'csv' | 'pdf' | 'zip' | null>(null)
+
+  async function handleExport(format: 'csv' | 'pdf' | 'zip') {
+    setExporting(format)
+    try {
+      if (format === 'pdf') {
+        await exportPDF(candidates, status)
+      } else {
+        const params = new URLSearchParams()
+        if (status) params.set('status', status)
+        if (search) params.set('search', search)
+        const url = `/api/export/${format}?${params}`
+        const a = document.createElement('a')
+        a.href = url
+        a.click()
+        // Give the browser a moment to start the download
+        await new Promise((r) => setTimeout(r, 800))
+      }
+    } finally {
+      setExporting(null)
+    }
+  }
 
   const fetchCandidates = useCallback(async () => {
     setLoading(true)
@@ -67,6 +123,19 @@ export default function CandidatesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Candidates</h1>
           <p className="text-gray-500 text-sm mt-0.5">{total} total</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-gray-400 mr-1">Export filtered:</span>
+          {(['csv', 'pdf', 'zip'] as const).map((fmt) => (
+            <button
+              key={fmt}
+              onClick={() => handleExport(fmt)}
+              disabled={exporting !== null || candidates.length === 0}
+              className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors uppercase tracking-wide"
+            >
+              {exporting === fmt ? '…' : fmt}
+            </button>
+          ))}
         </div>
       </div>
 
