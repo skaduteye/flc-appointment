@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { calculateScore, SCORE_THRESHOLD } from '@/lib/scoring'
+import { calculateScore } from '@/lib/scoring'
+import { getAllSettings } from '@/lib/settings'
 import {
   sendSms,
   buildSubmissionMessage,
@@ -16,10 +17,10 @@ function getAdminClient() {
   )
 }
 
-function resolveAutoStatus(total: number, isDisqualified: boolean): CandidateStatus {
-  if (isDisqualified) return 'under_review' // flagged — needs manual review
-  if (total >= SCORE_THRESHOLD) return 'under_review'
-  return 'pending' // rejection is the lead pastor's call, not automatic
+function resolveAutoStatus(total: number, isDisqualified: boolean, threshold: number): CandidateStatus {
+  if (isDisqualified) return 'under_review'
+  if (total >= threshold) return 'under_review'
+  return 'pending'
 }
 
 // POST /api/candidates — public submission
@@ -35,8 +36,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'full_name is required' }, { status: 400 })
   }
 
-  const { total, isDisqualified } = calculateScore(body)
-  const autoStatus = resolveAutoStatus(total, isDisqualified)
+  const settings = await getAllSettings()
+  const { total, isDisqualified } = calculateScore(body, settings.scoring_weights)
+  const autoStatus = resolveAutoStatus(total, isDisqualified, settings.score_threshold)
 
   const supabase = getAdminClient()
   const { data, error } = await supabase
@@ -55,8 +57,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to save candidate' }, { status: 500 })
   }
 
-  // Fire SMS notifications — non-blocking, errors logged but not surfaced
-  void sendNotifications(data, autoStatus)
+  void sendNotifications(data, autoStatus, settings.admin_phone)
 
   return NextResponse.json({ id: data.id }, { status: 201 })
 }
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
 async function sendNotifications(
   candidate: { id: string; full_name: string; surname: string; total_score: number; is_disqualified: boolean; phone_number: string | null },
   autoStatus: CandidateStatus,
+  adminPhone: string | null,
 ) {
   const supabase = getAdminClient()
   const updates: Record<string, unknown> = {}
@@ -80,11 +82,11 @@ async function sendNotifications(
     }
   }
 
-  // 2. Admin alert SMS
-  const adminPhone = process.env.ADMIN_PHONE_NUMBER
-  if (adminPhone) {
+  // 2. Admin alert — settings DB value takes priority over env var fallback
+  const alertPhone = adminPhone || process.env.ADMIN_PHONE_NUMBER
+  if (alertPhone) {
     const msg = buildAdminAlertMessage(candidate, autoStatus)
-    const result = await sendSms([adminPhone], msg, 'Admin New Application')
+    const result = await sendSms([alertPhone], msg, 'Admin New Application')
     if (!result.success) console.error('Admin SMS failed:', result.error)
   }
 

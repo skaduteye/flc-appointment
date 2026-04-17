@@ -8,7 +8,8 @@ const links = [
   { href: '/admin/dashboard', label: 'Dashboard' },
   { href: '/admin/candidates', label: 'Candidates' },
   { href: '/admin/broadcast', label: 'Broadcast SMS' },
-  { href: '/admin/sync', label: 'Sync' },
+  { href: '/admin/sync', label: 'Import' },
+  { href: '/admin/settings', label: 'Settings' },
 ]
 
 export default function AdminNav() {

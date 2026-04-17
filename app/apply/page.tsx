@@ -1,11 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { calculateScore, SCORE_THRESHOLD } from '@/lib/scoring'
-import { OVERSIGHT_OPTIONS, OVERSIGHT_AREA_OPTIONS } from '@/lib/types'
+import { calculateScore } from '@/lib/scoring'
+import {
+  DEFAULT_OVERSIGHT_OPTIONS,
+  DEFAULT_OVERSIGHT_AREAS,
+  DEFAULT_SCORING_WEIGHTS,
+} from '@/lib/settings'
 import { isValidGhanaPhone } from '@/lib/sms'
 import type { CandidateInput } from '@/lib/types'
+import type { AppSettings } from '@/lib/settings'
 
 const defaultValues: CandidateInput = {
   full_name: '',
@@ -153,12 +158,25 @@ export default function ApplyPage() {
   const [form, setForm] = useState<CandidateInput>(defaultValues)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [settings, setSettings] = useState<Pick<AppSettings, 'oversight_options' | 'oversight_areas' | 'score_threshold' | 'scoring_weights'>>({
+    oversight_options: DEFAULT_OVERSIGHT_OPTIONS,
+    oversight_areas: DEFAULT_OVERSIGHT_AREAS,
+    score_threshold: 700,
+    scoring_weights: DEFAULT_SCORING_WEIGHTS,
+  })
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((s) => setSettings(s))
+      .catch(() => {})
+  }, [])
 
   const set = <K extends keyof CandidateInput>(key: K, value: CandidateInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
 
-  const { total, breakdown, isDisqualified } = calculateScore(form)
-  const meetsThreshold = !isDisqualified && total >= SCORE_THRESHOLD
+  const { total, breakdown, isDisqualified } = calculateScore(form, settings.scoring_weights)
+  const meetsThreshold = !isDisqualified && total >= settings.score_threshold
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -226,7 +244,7 @@ export default function ApplyPage() {
       }`}>
         {isDisqualified
           ? '⚠ A disqualifying response is selected'
-          : `Running score: ${total} / 1350 points${meetsThreshold ? ' ✓ Above threshold' : ` (${SCORE_THRESHOLD} needed)`}`}
+          : `Running score: ${total} / 1350 points${meetsThreshold ? ' ✓ Above threshold' : ` (${settings.score_threshold} needed)`}`}
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
@@ -306,7 +324,7 @@ export default function ApplyPage() {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="">Select your oversight…</option>
-                {OVERSIGHT_OPTIONS.map((o) => (
+                {settings.oversight_options.map((o) => (
                   <option key={o} value={o}>{o}</option>
                 ))}
               </select>
@@ -322,7 +340,7 @@ export default function ApplyPage() {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="">Select your area…</option>
-                {OVERSIGHT_AREA_OPTIONS.map((a) => (
+                {settings.oversight_areas.map((a) => (
                   <option key={a} value={a}>{a}</option>
                 ))}
               </select>
@@ -542,7 +560,7 @@ export default function ApplyPage() {
                   <div className={`text-5xl font-bold ${meetsThreshold ? 'text-green-700' : 'text-yellow-700'}`}>{total}</div>
                   <p className="text-gray-600 text-sm mt-1">out of {1350} maximum points</p>
                   <p className={`font-semibold mt-2 text-sm ${meetsThreshold ? 'text-green-700' : 'text-yellow-700'}`}>
-                    {meetsThreshold ? `✓ Meets the ${SCORE_THRESHOLD}-point threshold for consideration` : `${SCORE_THRESHOLD - total} more points needed for consideration`}
+                    {meetsThreshold ? `✓ Meets the ${settings.score_threshold}-point threshold for consideration` : `${settings.score_threshold - total} more points needed for consideration`}
                   </p>
                 </>
               )}
