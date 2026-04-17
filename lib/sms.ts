@@ -128,34 +128,10 @@ function candidateDisplayName(c: Pick<Candidate, 'full_name' | 'surname'>): stri
 }
 
 export function buildSubmissionMessage(
-  c: Pick<Candidate, 'full_name' | 'surname' | 'total_score' | 'is_disqualified'>,
+  c: Pick<Candidate, 'full_name' | 'surname' | 'total_score'>,
 ): string {
   const name = candidateDisplayName(c)
-  const score = c.total_score
-
-  if (c.is_disqualified) {
-    return (
-      `Dear ${name}, your pastoral appointment application has been received. ` +
-      `Your score is ${score}/1350. Your application has been flagged for review by leadership. ` +
-      `You will be contacted in due course. - First Love Church`
-    )
-  }
-
-  if (score >= SCORE_THRESHOLD) {
-    return (
-      `Dear ${name}, your pastoral appointment application has been received. ` +
-      `Your score is ${score}/1350 - above the ${SCORE_THRESHOLD}-point threshold. ` +
-      `Your application is now under review. You will be contacted with further information. ` +
-      `- First Love Church`
-    )
-  }
-
-  // Score < 700 — neutral confirmation only; rejection is communicated by admin
-  return (
-    `Dear ${name}, your pastoral appointment application has been received and is being reviewed. ` +
-    `Your score is ${score}/1350. You will be contacted by church leadership in due course. ` +
-    `- First Love Church`
-  )
+  return `Dear ${name}, your pastoral appointment score is ${c.total_score}/1350. - First Love Church`
 }
 
 export function buildStatusChangeMessage(
