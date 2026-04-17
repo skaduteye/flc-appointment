@@ -237,6 +237,42 @@ function TextArea({ label, value, onChange, placeholder }: {
   )
 }
 
+// ─── Review helpers ───────────────────────────────────────────────────────────
+
+function ReviewSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
+        <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{title}</p>
+      </div>
+      <div className="divide-y divide-gray-100">{children}</div>
+    </div>
+  )
+}
+
+function ReviewRow({ q, a }: { q: string; a: boolean | number }) {
+  const isNum = typeof a === 'number'
+  const display = isNum ? String(a) : a ? 'Yes' : 'No'
+  const colour = isNum ? 'text-gray-800' : a ? 'text-green-700' : 'text-gray-500'
+  return (
+    <div className="flex items-start justify-between gap-4 px-4 py-2.5 text-sm">
+      <span className="text-gray-700 flex-1">{q}</span>
+      <span className={`font-semibold shrink-0 ${colour}`}>{display}</span>
+    </div>
+  )
+}
+
+function ReviewDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="px-4 py-2 bg-amber-50 text-sm">
+      <span className="text-gray-500 text-xs font-medium">{label}: </span>
+      <span className="text-gray-700">{value}</span>
+    </div>
+  )
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function ApplyPage() {
   const router = useRouter()
   const [step, setStep] = useState(0)
@@ -272,7 +308,7 @@ export default function ApplyPage() {
       if (!form.full_name.trim()) return 'Please enter your given name(s)'
       if (!form.surname.trim()) return 'Please enter your surname'
       if (!form.gender) return 'Please select your gender'
-      if (!form.oversight) return 'Please select your oversight'
+      if (!form.oversight) return 'Please select your oversight leader'
       if (!form.oversight_area) return 'Please select your oversight area'
       if (!form.phone_number?.trim()) return 'Please enter your phone number'
       if (!isValidGhanaPhone(form.phone_number)) return 'Please enter a valid Ghana phone number (e.g. 0241234567)'
@@ -377,14 +413,14 @@ export default function ApplyPage() {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Oversight <span className="text-red-500">*</span>
+                Oversight Leader <span className="text-red-500">*</span>
               </label>
               <select
                 value={form.oversight ?? ''}
                 onChange={(e) => set('oversight', e.target.value || null)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
-                <option value="">Select your oversight…</option>
+                <option value="">Select your oversight leader…</option>
                 {OVERSIGHT_OPTIONS.map((o) => (
                   <option key={o} value={o}>{o}</option>
                 ))}
