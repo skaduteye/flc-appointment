@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Failed to save candidate: ${error.message}` }, { status: 500 })
   }
 
-  void sendNotifications(data, autoStatus, settings.admin_phone)
+  await sendNotifications(data, autoStatus, settings.admin_phone)
 
   return NextResponse.json({ id: data.id }, { status: 201 })
 }
