@@ -13,7 +13,7 @@ function getHeaders() {
 }
 
 function getSenderId() {
-  return process.env.FLASHSMS_SENDER_ID ?? 'FLChurch'
+  return process.env.FLASHSMS_SENDER_ID ?? 'FL OFFICE'
 }
 
 // Normalise a Ghana number to the format FlashSMS accepts (0XXXXXXXXX)
@@ -97,30 +97,6 @@ export async function sendSmsToGroup(
   }
 }
 
-// ─── Balance ──────────────────────────────────────────────────────────────────
-
-export interface BalanceResult {
-  success: boolean
-  balance?: number
-  accountName?: string
-  error?: string
-}
-
-export async function getBalance(): Promise<BalanceResult> {
-  try {
-    const res = await fetch(`${BASE_URL}/balance`, { headers: getHeaders() })
-    const json = await res.json()
-    if (!json.success) return { success: false, error: json.error }
-    return {
-      success: true,
-      balance: json.data.balance,
-      accountName: json.data.accountName,
-    }
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
-  }
-}
-
 // ─── Message templates ────────────────────────────────────────────────────────
 
 function candidateDisplayName(c: Pick<Candidate, 'full_name' | 'surname'>): string {
@@ -131,7 +107,7 @@ export function buildSubmissionMessage(
   c: Pick<Candidate, 'full_name' | 'surname' | 'total_score'>,
 ): string {
   const name = candidateDisplayName(c)
-  return `Dear ${name}, your pastoral appointment score is ${c.total_score}/1350. - First Love Church`
+  return `Dear ${name}, your pastoral appointment score is ${c.total_score}/1350.`
 }
 
 export function buildStatusChangeMessage(
@@ -143,7 +119,7 @@ export function buildStatusChangeMessage(
     case 'approved':
       return (
         `Dear ${name}, congratulations! Your pastoral appointment application has been APPROVED. ` +
-        `Church leadership will be in contact with you regarding next steps. - First Love Church`
+        `Church leadership will be in contact with you regarding next steps.`
       )
     case 'rejected':
       // No SMS — rejection is communicated personally by admin/lead pastor
@@ -151,7 +127,7 @@ export function buildStatusChangeMessage(
     case 'under_review':
       return (
         `Dear ${name}, your pastoral appointment application is now under review by church leadership. ` +
-        `You will be contacted with a decision in due course. - First Love Church`
+        `You will be contacted with a decision in due course.`
       )
     default:
       return null
@@ -167,6 +143,6 @@ export function buildAdminAlertMessage(
   return (
     `FLC Appointments: New application from ${name}.${flag} ` +
     `Score: ${c.total_score}/1350. Auto-status: ${autoStatus.replace('_', ' ')}. ` +
-    `Review at /admin/candidates`
+    `Please review. `
   )
 }

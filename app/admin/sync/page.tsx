@@ -10,7 +10,6 @@ interface SyncStatus {
 
 export default function SyncPage() {
   const [status, setStatus] = useState<SyncStatus | null>(null)
-  const [smsBalance, setSmsBalance] = useState<number | null>(null)
   const [importing, setImporting] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [result, setResult] = useState<string | null>(null)
@@ -22,17 +21,8 @@ export default function SyncPage() {
     setStatus(data)
   }
 
-  async function fetchSmsBalance() {
-    try {
-      const res = await fetch('/api/sms/balance')
-      const data = await res.json()
-      if (data.balance !== undefined) setSmsBalance(data.balance)
-    } catch { /* silently ignore if SMS not configured */ }
-  }
-
   useEffect(() => {
     fetchStatus()
-    fetchSmsBalance()
   }, [])
 
   async function runImport() {
@@ -92,15 +82,7 @@ export default function SyncPage() {
             </div>
             <div className="text-gray-500 text-sm mt-1">Last synced</div>
           </div>
-          <div className={`rounded-lg p-4 text-center ${smsBalance === null ? 'bg-gray-50' : smsBalance < 50 ? 'bg-red-50' : 'bg-green-50'}`}>
-            <div className={`text-3xl font-bold ${smsBalance === null ? 'text-gray-400' : smsBalance < 50 ? 'text-red-600' : 'text-green-700'}`}>
-              {smsBalance !== null ? smsBalance.toLocaleString() : '—'}
-            </div>
-            <div className="text-gray-500 text-sm mt-1">SMS credits</div>
-            {smsBalance !== null && smsBalance < 50 && (
-              <div className="text-red-600 text-xs mt-1 font-medium">Low balance</div>
-            )}
-          </div>
+
         </div>
       </div>
 

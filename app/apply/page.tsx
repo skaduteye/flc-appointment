@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { calculateScore, SCORE_THRESHOLD } from '@/lib/scoring'
 import { OVERSIGHT_OPTIONS, OVERSIGHT_AREA_OPTIONS } from '@/lib/types'
 import { isValidGhanaPhone } from '@/lib/sms'
 import type { CandidateInput } from '@/lib/types'
@@ -73,15 +72,13 @@ function YesNo({
   label,
   value,
   onChange,
-  warning,
 }: {
   label: string
   value: boolean
   onChange: (v: boolean) => void
-  warning?: boolean
 }) {
   return (
-    <div className={`rounded-lg border p-4 ${warning && value ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
       <p className="text-sm font-medium text-gray-800 mb-3">{label}</p>
       <div className="flex gap-3">
         {([true, false] as const).map((opt) => (
@@ -92,9 +89,7 @@ function YesNo({
             className={`flex-1 py-2 rounded-md text-sm font-semibold border transition-colors ${
               value === opt
                 ? opt
-                  ? warning
-                    ? 'bg-red-600 text-white border-red-600'
-                    : 'bg-blue-700 text-white border-blue-700'
+                  ? 'bg-blue-700 text-white border-blue-700'
                   : 'bg-gray-700 text-white border-gray-700'
                 : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
             }`}
@@ -103,11 +98,6 @@ function YesNo({
           </button>
         ))}
       </div>
-      {warning && value && (
-        <p className="mt-2 text-xs text-red-600 font-medium">
-          ⚠ This response flags the candidate for disqualification review.
-        </p>
-      )}
     </div>
   )
 }
@@ -156,9 +146,6 @@ export default function ApplyPage() {
 
   const set = <K extends keyof CandidateInput>(key: K, value: CandidateInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
-
-  const { total, breakdown, isDisqualified } = calculateScore(form)
-  const meetsThreshold = !isDisqualified && total >= SCORE_THRESHOLD
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -218,16 +205,7 @@ export default function ApplyPage() {
         </div>
       </div>
 
-      {/* Live score banner */}
-      <div className={`px-4 py-2 text-center text-sm font-semibold ${
-        isDisqualified ? 'bg-red-100 text-red-700' :
-        meetsThreshold ? 'bg-green-50 text-green-700' :
-        'bg-blue-50 text-blue-700'
-      }`}>
-        {isDisqualified
-          ? '⚠ A disqualifying response is selected'
-          : `Running score: ${total} / 1350 points${meetsThreshold ? ' ✓ Above threshold' : ` (${SCORE_THRESHOLD} needed)`}`}
-      </div>
+
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
 
@@ -373,7 +351,6 @@ export default function ApplyPage() {
               label="Do you have any spiritual/character problem not ideal for pastoral calling? (e.g. borrowing from members, etc.)"
               value={form.has_spiritual_character_problem}
               onChange={(v) => set('has_spiritual_character_problem', v)}
-              warning
             />
             {form.has_spiritual_character_problem && (
               <TextArea
@@ -387,7 +364,6 @@ export default function ApplyPage() {
               label="Do you have any known moral problem? (e.g. fornication, pornography, etc.)"
               value={form.has_known_moral_problem}
               onChange={(v) => set('has_known_moral_problem', v)}
-              warning
             />
             {form.has_known_moral_problem && (
               <TextArea
@@ -401,13 +377,11 @@ export default function ApplyPage() {
               label="Are you a known thief?"
               value={form.is_known_thief}
               onChange={(v) => set('is_known_thief', v)}
-              warning
             />
             <YesNo
               label="Have you shown traits of disloyalty? (e.g. association with Orangus, left serving position in another church, non-compliant with admin instructions, etc.)"
               value={form.has_shown_disloyalty}
               onChange={(v) => set('has_shown_disloyalty', v)}
-              warning
             />
           </div>
         )}
@@ -525,50 +499,9 @@ export default function ApplyPage() {
               <p className="text-gray-500">{form.gender} · {form.oversight} · {form.oversight_area}</p>
             </div>
 
-            {/* Score card */}
-            <div className={`rounded-xl border-2 p-6 text-center ${
-              isDisqualified ? 'border-red-300 bg-red-50' :
-              meetsThreshold ? 'border-green-300 bg-green-50' :
-              'border-yellow-300 bg-yellow-50'
-            }`}>
-              {isDisqualified ? (
-                <>
-                  <div className="text-4xl mb-2">⚠</div>
-                  <p className="text-red-700 font-bold text-lg">Disqualifying Response Detected</p>
-                  <p className="text-red-600 text-sm mt-1">Application will be submitted and flagged for review.</p>
-                </>
-              ) : (
-                <>
-                  <div className={`text-5xl font-bold ${meetsThreshold ? 'text-green-700' : 'text-yellow-700'}`}>{total}</div>
-                  <p className="text-gray-600 text-sm mt-1">out of {1350} maximum points</p>
-                  <p className={`font-semibold mt-2 text-sm ${meetsThreshold ? 'text-green-700' : 'text-yellow-700'}`}>
-                    {meetsThreshold ? `✓ Meets the ${SCORE_THRESHOLD}-point threshold for consideration` : `${SCORE_THRESHOLD - total} more points needed for consideration`}
-                  </p>
-                </>
-              )}
-            </div>
-
-            {/* Breakdown */}
-            <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 bg-white">
-              {[
-                { label: 'Cat A — Strong Christian Status', value: breakdown.spiritual },
-                { label: 'Cat B — Sweet Influence (Disqualifiers)', value: breakdown.disqualifiers },
-                { label: 'Cat C — Loyalty Status', value: breakdown.membership },
-                { label: 'Cat D — Fruitfulness Status', value: breakdown.ministry },
-                { label: 'Cat E — Servants Armed & Trained', value: breakdown.equipped },
-                { label: 'Cat G — Pineapple Patch', value: breakdown.pineapple },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex justify-between items-center px-4 py-3 text-sm">
-                  <span className="text-gray-600">{label}</span>
-                  <span className={`font-semibold ${value < 0 ? 'text-red-600' : value > 0 ? 'text-green-700' : 'text-gray-400'}`}>
-                    {value > 0 ? '+' : ''}{value}
-                  </span>
-                </div>
-              ))}
-              <div className="flex justify-between items-center px-4 py-3 text-sm font-bold bg-gray-50">
-                <span>Total</span>
-                <span className={isDisqualified ? 'text-red-600' : 'text-gray-900'}>{total}</span>
-              </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-6 text-center">
+              <p className="text-blue-800 font-semibold">Your application is ready to submit.</p>
+              <p className="text-blue-600 text-sm mt-1">Please review your details above before confirming.</p>
             </div>
 
             <div className="text-sm text-gray-500 bg-blue-50 border border-blue-200 rounded-lg p-4">

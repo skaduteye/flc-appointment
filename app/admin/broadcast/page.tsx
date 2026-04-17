@@ -21,17 +21,8 @@ export default function BroadcastPage() {
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{ sent: number; creditsUsed: number; total: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [balance, setBalance] = useState<number | null>(null)
   const [candidateCount, setCandidateCount] = useState<number | null>(null)
   const [confirmed, setConfirmed] = useState(false)
-
-  // Fetch SMS balance
-  useEffect(() => {
-    fetch('/api/sms/balance')
-      .then((r) => r.json())
-      .then((d) => { if (d.balance !== undefined) setBalance(d.balance) })
-      .catch(() => {})
-  }, [])
 
   // Fetch candidate count for selected filter
   useEffect(() => {
@@ -46,6 +37,7 @@ export default function BroadcastPage() {
 
   const parts = Math.ceil(message.length / SMS_LIMIT) || 1
   const creditsNeeded = (candidateCount ?? 0) * parts
+  const balance = null // balance checks removed
 
   async function handleSend() {
     setSending(true)
@@ -83,20 +75,7 @@ export default function BroadcastPage() {
         </p>
       </div>
 
-      {/* Balance */}
-      <div className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4">
-        <div className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" />
-        <span className="text-sm text-gray-600">
-          {balance !== null
-            ? <><strong className="text-gray-900">{balance.toLocaleString()}</strong> credits available</>
-            : 'Fetching balance…'}
-        </span>
-        {balance !== null && creditsNeeded > 0 && (
-          <span className={`ml-auto text-sm font-medium ${creditsNeeded > balance ? 'text-red-600' : 'text-green-700'}`}>
-            {creditsNeeded > balance ? `⚠ Insufficient (need ${creditsNeeded})` : `✓ Enough credits (need ${creditsNeeded})`}
-          </span>
-        )}
-      </div>
+
 
       {/* Recipient group */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">

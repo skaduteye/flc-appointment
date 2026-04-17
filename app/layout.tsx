@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FLC Pastoral Candidate Portal",
-  description: "First Love Church – Pastoral Appointment Evaluation System",
+  title: "UO-FLC Pastoral Appointment Portal",
+  description: "First Love Church – Pastoral Appointment Point Evaluation System",
 };
 
 export default function RootLayout({

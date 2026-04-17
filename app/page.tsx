@@ -7,7 +7,7 @@ export default function Home() {
         <div className="space-y-3">
           <p className="text-blue-300 text-sm font-semibold uppercase tracking-widest">First Love Church</p>
           <h1 className="text-4xl font-bold leading-tight">
-            Pastoral Appointment<br />Evaluation Portal
+            Pastoral Appointment<br />Points Evaluation Portal
           </h1>
           <p className="text-blue-200 text-lg">
             Complete your pastoral candidate application. Responses are scored automatically
@@ -28,19 +28,6 @@ export default function Home() {
           >
             Admin Login
           </Link>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 pt-4">
-          {[
-            { label: '34', desc: 'Evaluation criteria' },
-            { label: '5 min', desc: 'To complete' },
-            { label: 'Secure', desc: 'Private & confidential' },
-          ].map(({ label, desc }) => (
-            <div key={label} className="bg-blue-900/50 rounded-lg p-4 border border-blue-700">
-              <div className="text-2xl font-bold">{label}</div>
-              <div className="text-blue-300 text-sm">{desc}</div>
-            </div>
-          ))}
         </div>
       </div>
     </main>
