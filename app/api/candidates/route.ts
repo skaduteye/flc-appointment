@@ -53,8 +53,8 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) {
-    console.error('Insert error:', error)
-    return NextResponse.json({ error: 'Failed to save candidate' }, { status: 500 })
+    console.error('Insert error:', error.message, error.details, error.hint)
+    return NextResponse.json({ error: `Failed to save candidate: ${error.message}` }, { status: 500 })
   }
 
   void sendNotifications(data, autoStatus, settings.admin_phone)

@@ -20,7 +20,7 @@ create trigger settings_updated_at
 alter table settings enable row level security;
 
 create policy "public_read" on settings for select using (true);
-create policy "admin_write" on settings for insert using (auth.role() = 'authenticated');
+create policy "admin_write" on settings for insert with check (auth.role() = 'authenticated');
 create policy "admin_update" on settings for update using (auth.role() = 'authenticated');
 
 -- Seed defaults

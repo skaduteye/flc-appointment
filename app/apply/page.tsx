@@ -600,19 +600,98 @@ export default function ApplyPage() {
         {step === 7 && (
           <div className="space-y-6">
             <h2 className="font-semibold text-gray-900 text-lg">Review Your Application</h2>
+            <p className="text-sm text-gray-500">Check all your details carefully before submitting. Use the Back button to make changes.</p>
 
-            {/* Identity summary */}
-            <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-sm space-y-1">
-              <p className="font-semibold text-gray-800">{form.full_name} {form.surname}</p>
-              <p className="text-gray-500">{form.gender} · {form.oversight} · {form.oversight_area}</p>
+            {/* Photo + identity */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 flex gap-4 items-start">
+              {form.photo_url ? (
+                <img
+                  src={`/api/photos/${form.photo_url}`}
+                  alt="Passport photo"
+                  className="w-20 h-24 rounded-lg object-cover border border-gray-200 shadow-sm shrink-0"
+                />
+              ) : (
+                <div className="w-20 h-24 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center shrink-0">
+                  <span className="text-gray-400 text-xs text-center">No photo</span>
+                </div>
+              )}
+              <div className="text-sm space-y-1">
+                <p className="font-bold text-gray-900 text-base">{form.full_name} {form.surname}</p>
+                {form.date_of_birth && <p className="text-gray-500">DOB: {form.date_of_birth}</p>}
+                <p className="text-gray-600">{form.gender}</p>
+                <p className="text-gray-600">{form.oversight}</p>
+                <p className="text-gray-500 text-xs">{form.oversight_area}</p>
+                <p className="text-gray-600">{form.phone_number}</p>
+              </div>
             </div>
 
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-6 text-center">
-              <p className="text-blue-800 font-semibold">Your application is ready to submit.</p>
-              <p className="text-blue-600 text-sm mt-1">Please review your details above before confirming.</p>
-            </div>
+            {/* Category A */}
+            <ReviewSection title="Category A — Strong Christian Status">
+              <ReviewRow q="Are you born again?" a={form.is_born_again} />
+              <ReviewRow q="Do you speak in tongues?" a={form.speaks_in_tongues} />
+              <ReviewRow q="Do you believe you have a call to the ministry?" a={form.has_call_to_ministry} />
+              <ReviewRow q="Do you pray regularly? (min. 1 hr/day)" a={form.prays_regularly} />
+              <ReviewRow q="Do you pay tithes regularly?" a={form.pays_tithes_regularly} />
+            </ReviewSection>
 
-            <div className="text-sm text-gray-500 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            {/* Category B */}
+            <ReviewSection title="Category B — Sweet Influence Status">
+              <ReviewRow q="Spiritual/character problem not ideal for pastoral calling?" a={form.has_spiritual_character_problem} />
+              {form.has_spiritual_character_problem && form.spiritual_character_detail && (
+                <ReviewDetail label="Details" value={form.spiritual_character_detail} />
+              )}
+              <ReviewRow q="Any known moral problem?" a={form.has_known_moral_problem} />
+              {form.has_known_moral_problem && form.moral_problem_detail && (
+                <ReviewDetail label="Details" value={form.moral_problem_detail} />
+              )}
+              <ReviewRow q="Are you a known thief?" a={form.is_known_thief} />
+              <ReviewRow q="Have you shown traits of disloyalty?" a={form.has_shown_disloyalty} />
+            </ReviewSection>
+
+            {/* Category C */}
+            <ReviewSection title="Category C — Loyalty Status">
+              <ReviewRow q="Years of membership in UO" a={form.years_of_membership} />
+              <ReviewRow q="Times volunteered at special programs" a={form.volunteer_times} />
+              <ReviewRow q="Volunteered in church offices on a lay basis?" a={form.volunteers_in_church_offices} />
+              <ReviewRow q="Years as a full-time worker" a={form.years_fulltime_worker} />
+              <ReviewRow q="Are you in full-time ministry?" a={form.is_fulltime_ministry} />
+              <ReviewRow q="Are you a missionary?" a={form.is_missionary} />
+              <ReviewRow q="Are you a missionary wife?" a={form.is_missionary_wife} />
+              <ReviewRow q="Are you a BENMP?" a={form.is_benmp} />
+            </ReviewSection>
+
+            {/* Category D */}
+            <ReviewSection title="Category D — Fruitfulness Status">
+              <ReviewRow q="Preach to 20 or more members every week?" a={form.preaches_to_20plus} />
+              <ReviewRow q="Preach to 10 or fewer members every week?" a={form.preaches_to_10_or_less} />
+              <ReviewRow q="Centers / bacentas / fellowships planted" a={form.centers_planted} />
+            </ReviewSection>
+
+            {/* Category E */}
+            <ReviewSection title="Category E — Servants Armed & Trained">
+              <ReviewRow q="Camps attended with Prophet" a={form.camps_with_prophet} />
+              {form.camps_with_prophet > 0 && form.camps_with_prophet_list && (
+                <ReviewDetail label="Camps list" value={form.camps_with_prophet_list} />
+              )}
+              <ReviewRow q="Camps attended with other Bishops" a={form.camps_with_bishops} />
+              <ReviewRow q="Root camps attended" a={form.root_camps_attended} />
+            </ReviewSection>
+
+            {/* Category G */}
+            <ReviewSection title="Category G — Pineapple Patch">
+              <ReviewRow q="Tablet/Device with all Bishop Dag's books (100 books)?" a={form.has_tablet_with_books} />
+              <ReviewRow q="Hard copies of all Bishop Dag's books (100 books)?" a={form.has_hard_copies_books} />
+              <ReviewRow q="Tablet with Bibles and Bible Study Aids?" a={form.has_tablet_with_bibles} />
+              <ReviewRow q="Hard copies of Bibles and Bible Study Aids?" a={form.has_hard_copies_bibles} />
+              <ReviewRow q="Access to UO Audio Library?" a={form.has_audio_library_access} />
+              <ReviewRow q="Regular communication with Prophet?" a={form.communicates_with_prophet} />
+              <ReviewRow q="Regular communication with Mothers?" a={form.communicates_with_mothers} />
+              <ReviewRow q="Communication with Other Bishops?" a={form.communicates_with_bishops} />
+              <ReviewRow q="Demonstrated interest in other church activities?" a={form.interest_in_church_activities} />
+            </ReviewSection>
+
+            {/* Declaration */}
+            <div className="text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded-lg p-4">
               <strong>Declaration:</strong> I confirm that all responses above are truthful and accurate to
               the best of my knowledge. I understand that false declarations may affect my candidacy.
             </div>
