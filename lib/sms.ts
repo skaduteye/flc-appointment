@@ -150,10 +150,11 @@ export function buildSubmissionMessage(
     )
   }
 
+  // Score < 700 — neutral confirmation only; rejection is communicated by admin
   return (
-    `Dear ${name}, your pastoral appointment application has been received. ` +
-    `Your score is ${score}/1350. The minimum score for consideration is ${SCORE_THRESHOLD} points. ` +
-    `Your application has not qualified at this time. - First Love Church`
+    `Dear ${name}, your pastoral appointment application has been received and is being reviewed. ` +
+    `Your score is ${score}/1350. You will be contacted by church leadership in due course. ` +
+    `- First Love Church`
   )
 }
 
@@ -169,10 +170,8 @@ export function buildStatusChangeMessage(
         `Church leadership will be in contact with you regarding next steps. - First Love Church`
       )
     case 'rejected':
-      return (
-        `Dear ${name}, after careful review, your pastoral appointment application has not been ` +
-        `successful at this time. Thank you for your interest. - First Love Church`
-      )
+      // No SMS — rejection is communicated personally by admin/lead pastor
+      return null
     case 'under_review':
       return (
         `Dear ${name}, your pastoral appointment application is now under review by church leadership. ` +

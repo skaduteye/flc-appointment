@@ -19,7 +19,7 @@ function getAdminClient() {
 function resolveAutoStatus(total: number, isDisqualified: boolean): CandidateStatus {
   if (isDisqualified) return 'under_review' // flagged — needs manual review
   if (total >= SCORE_THRESHOLD) return 'under_review'
-  return 'rejected'
+  return 'pending' // rejection is the lead pastor's call, not automatic
 }
 
 // POST /api/candidates — public submission
