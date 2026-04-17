@@ -94,18 +94,15 @@ function PhotoUpload({ value, onChange, firstName, surname }: {
     setUploading(true)
     try {
       const name = `${firstName} ${surname}`.trim()
-      const res = await fetch(`/api/upload/photo?type=${encodeURIComponent(file.type)}&size=${file.size}&name=${encodeURIComponent(name)}`)
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('name', name)
+      const res = await fetch('/api/upload/photo', { method: 'POST', body: fd })
       if (!res.ok) {
         const body = await res.json()
-        throw new Error(body.error ?? 'Failed to get upload URL')
+        throw new Error(body.error ?? 'Upload failed')
       }
-      const { uploadUrl, key } = await res.json()
-      const put = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      })
-      if (!put.ok) throw new Error('Upload to storage failed')
+      const { key } = await res.json()
       setPreview(URL.createObjectURL(file))
       onChange(key)
     } catch (err) {
@@ -133,7 +130,7 @@ function PhotoUpload({ value, onChange, firstName, surname }: {
           <ul className="space-y-0.5 list-none">
             <li>✓ Plain <strong>white background</strong></li>
             <li>✓ Full face clearly visible, looking forward</li>
-            <li>✓ No sunglasses or headwear (unless religious)</li>
+            <li>✓ No sunglasses or headwear</li>
             <li>✓ Recent photo</li>
             <li>✓ JPEG, PNG or WebP · max 5 MB</li>
           </ul>
