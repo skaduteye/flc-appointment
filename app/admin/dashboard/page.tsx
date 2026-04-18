@@ -116,7 +116,7 @@ export default function DashboardPage() {
                 {histogram.map((entry) => (
                   <Cell
                     key={entry.range}
-                    fill={entry.range === '<0' ? '#ef4444' : entry.min >= 800 ? '#16a34a' : '#3b82f6'}
+                    fill={entry.min >= 700 ? '#16a34a' : '#ef4444'}
                   />
                 ))}
               </Bar>

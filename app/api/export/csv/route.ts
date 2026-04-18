@@ -82,10 +82,14 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status') as CandidateStatus | null
   const search = searchParams.get('search')
+  const oversight = searchParams.get('oversight')
+  const oversightArea = searchParams.get('oversight_area')
 
   let query = supabase.from('candidates').select('*').order('total_score', { ascending: false })
   if (status) query = query.eq('status', status)
   if (search) query = query.ilike('full_name', `%${search}%`)
+  if (oversight) query = query.eq('oversight', oversight)
+  if (oversightArea) query = query.eq('oversight_area', oversightArea)
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

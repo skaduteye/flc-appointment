@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import type { Candidate, CandidateStatus } from '@/lib/types'
 import { statusColor, scoreColor, formatDate, formatStatus } from '@/lib/utils'
+import { DEFAULT_OVERSIGHT_AREAS, DEFAULT_OVERSIGHT_OPTIONS } from '@/lib/types'
 
 const STATUS_OPTIONS: (CandidateStatus | '')[] = ['', 'pending', 'under_review', 'approved', 'rejected']
 
@@ -67,11 +68,23 @@ export default function CandidatesPage() {
   const [page, setPage] = useState(1)
   const [exporting, setExporting] = useState<'csv' | 'pdf' | 'zip' | null>(null)
   const [threshold, setThreshold] = useState(700)
+  const [oversight, setOversight] = useState('')
+  const [oversightArea, setOversightArea] = useState('')
+  const [oversightOptions, setOversightOptions] = useState<string[]>(DEFAULT_OVERSIGHT_OPTIONS)
+  const [oversightAreas, setOversightAreas] = useState<string[]>(DEFAULT_OVERSIGHT_AREAS)
 
   useEffect(() => {
     fetch('/api/settings')
       .then((r) => r.json())
-      .then((s) => { if (s.score_threshold) setThreshold(s.score_threshold) })
+      .then((s) => {
+        if (s.score_threshold) setThreshold(s.score_threshold)
+        if (Array.isArray(s.oversight_options) && s.oversight_options.length > 0) {
+          setOversightOptions(s.oversight_options)
+        }
+        if (Array.isArray(s.oversight_areas) && s.oversight_areas.length > 0) {
+          setOversightAreas(s.oversight_areas)
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -84,6 +97,8 @@ export default function CandidatesPage() {
         const params = new URLSearchParams()
         if (status) params.set('status', status)
         if (search) params.set('search', search)
+        if (oversight) params.set('oversight', oversight)
+        if (oversightArea) params.set('oversight_area', oversightArea)
         const url = `/api/export/${format}?${params}`
         const a = document.createElement('a')
         a.href = url
@@ -106,6 +121,8 @@ export default function CandidatesPage() {
     })
     if (search) params.set('search', search)
     if (status) params.set('status', status)
+    if (oversight) params.set('oversight', oversight)
+    if (oversightArea) params.set('oversight_area', oversightArea)
 
     try {
       const res = await fetch(`/api/candidates?${params}`)
@@ -118,7 +135,7 @@ export default function CandidatesPage() {
     } finally {
       setLoading(false)
     }
-  }, [search, status, sort, order, page])
+  }, [search, status, oversight, oversightArea, sort, order, page])
 
   useEffect(() => {
     fetchCandidates()
@@ -169,7 +186,7 @@ export default function CandidatesPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <input
           type="text"
           placeholder="Search by name…"
@@ -186,6 +203,26 @@ export default function CandidatesPage() {
             <option key={s} value={s}>
               {s === '' ? 'All statuses' : formatStatus(s, threshold)}
             </option>
+          ))}
+        </select>
+        <select
+          value={oversight}
+          onChange={(e) => { setOversight(e.target.value); setPage(1) }}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All oversight leaders</option>
+          {oversightOptions.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+        <select
+          value={oversightArea}
+          onChange={(e) => { setOversightArea(e.target.value); setPage(1) }}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All oversight areas</option>
+          {oversightAreas.map((a) => (
+            <option key={a} value={a}>{a}</option>
           ))}
         </select>
       </div>

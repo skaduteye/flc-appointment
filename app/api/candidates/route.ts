@@ -92,6 +92,8 @@ export async function GET(req: NextRequest) {
 
   const status = searchParams.get('status')
   const search = searchParams.get('search')
+  const oversight = searchParams.get('oversight')
+  const oversightArea = searchParams.get('oversight_area')
   const sort = searchParams.get('sort') ?? 'total_score'
   const order = searchParams.get('order') ?? 'desc'
   const page = parseInt(searchParams.get('page') ?? '1')
@@ -102,6 +104,8 @@ export async function GET(req: NextRequest) {
 
   if (status) query = query.eq('status', status)
   if (search) query = query.ilike('full_name', `%${search}%`)
+  if (oversight) query = query.eq('oversight', oversight)
+  if (oversightArea) query = query.eq('oversight_area', oversightArea)
 
   query = query.order(sort, { ascending: order === 'asc' })
   query = query.range(offset, offset + limit - 1)
