@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     .insert({
       ...body,
       total_score: total,
-      is_disqualified: isDisqualified,
+      is_disqualified: false,
       status: autoStatus,
     })
     .select('*')

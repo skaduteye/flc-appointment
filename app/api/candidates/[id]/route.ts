@@ -57,8 +57,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (existing) {
       existingStatus = existing.status
       const merged = { ...existing, ...body } as CandidateInput
-      const { total, isDisqualified } = calculateScore(merged)
-      updates = { ...updates, total_score: total, is_disqualified: isDisqualified }
+      const { total } = calculateScore(merged)
+      // is_disqualified is admin-only — never auto-overwrite it during score recalc
+      updates = { ...updates, total_score: total }
     }
   }
 

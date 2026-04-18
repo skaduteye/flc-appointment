@@ -44,6 +44,7 @@ export default function CandidateDetailPage() {
   const [saving, setSaving] = useState(false)
   const [notes, setNotes] = useState('')
   const [status, setStatus] = useState<CandidateStatus>('pending')
+  const [flagged, setFlagged] = useState(false)
   const [saved, setSaved] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -57,6 +58,7 @@ export default function CandidateDetailPage() {
         setCandidate(c)
         setNotes(c.admin_notes ?? '')
         setStatus(c.status)
+        setFlagged(c.is_disqualified)
         setLoading(false)
       })
       .catch((err) => {
@@ -70,7 +72,7 @@ export default function CandidateDetailPage() {
     await fetch(`/api/candidates/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, admin_notes: notes }),
+      body: JSON.stringify({ status, admin_notes: notes, is_disqualified: flagged }),
     })
     setSaving(false)
     setSaved(true)
@@ -87,7 +89,7 @@ export default function CandidateDetailPage() {
   if (loading) return <div className="text-gray-500 text-sm">Loading…</div>
   if (!candidate) return <div className="text-gray-500 text-sm">Candidate not found.</div>
 
-  const { breakdown, isDisqualified } = calculateScore(candidate)
+  const { breakdown } = calculateScore(candidate)
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -115,12 +117,12 @@ export default function CandidateDetailPage() {
             <p className="text-gray-400 text-xs mt-1">Submitted {formatDate(candidate.created_at)}</p>
           </div>
         </div>
-        <div className={`text-center rounded-xl px-4 py-3 border-2 shrink-0 ${isDisqualified ? 'bg-red-50 border-red-300' : 'bg-blue-50 border-blue-200'}`}>
-          <div className={`text-4xl font-bold ${isDisqualified ? 'text-red-600' : 'text-blue-700'}`}>
+        <div className={`text-center rounded-xl px-4 py-3 border-2 shrink-0 ${flagged ? 'bg-red-50 border-red-300' : 'bg-blue-50 border-blue-200'}`}>
+          <div className={`text-4xl font-bold ${flagged ? 'text-red-600' : 'text-blue-700'}`}>
             {candidate.total_score}
           </div>
           <div className="text-xs text-gray-500 mt-0.5">Total Score</div>
-          {isDisqualified && <div className="text-xs text-red-600 font-semibold mt-1">DISQUALIFIED</div>}
+          {flagged && <div className="text-xs text-red-600 font-semibold mt-1">FLAGGED</div>}
         </div>
       </div>
 
@@ -242,6 +244,20 @@ export default function CandidateDetailPage() {
       {/* Admin panel */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
         <h3 className="font-semibold text-gray-800">Admin Actions</h3>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Flag Candidate</label>
+          <button
+            type="button"
+            onClick={() => setFlagged((f) => !f)}
+            className={`w-full py-2 rounded-lg text-sm font-semibold border transition-colors ${
+              flagged
+                ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
+                : 'bg-white text-gray-700 border-gray-300 hover:border-red-400 hover:text-red-600'
+            }`}
+          >
+            {flagged ? '⚑ Flagged — click to remove flag' : '⚐ Flag this candidate'}
+          </button>
+        </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
           <select
