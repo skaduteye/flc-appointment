@@ -36,12 +36,25 @@ function buildHistogram(candidates: Candidate[]) {
   return buckets
 }
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+function StatCard({
+  label,
+  value,
+  color,
+  href,
+}: {
+  label: string
+  value: number
+  color: string
+  href: string
+}) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 text-center shadow-sm">
+    <Link
+      href={href}
+      className="block bg-white rounded-xl border border-gray-200 p-5 text-center shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+    >
       <div className={`text-3xl font-bold ${color}`}>{value}</div>
       <div className="text-gray-500 text-sm mt-1">{label}</div>
-    </div>
+    </Link>
   )
 }
 
@@ -101,11 +114,11 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatCard label="Total" value={stats.total} color="text-gray-900" />
-        <StatCard label={`< ${threshold}`} value={stats.pending} color="text-gray-600" />
-        <StatCard label="Approved" value={stats.approved} color="text-green-600" />
-        <StatCard label="Rejected" value={stats.rejected} color="text-red-600" />
-        <StatCard label="Under Review" value={stats.under_review} color="text-blue-600" />
+        <StatCard label="Total" value={stats.total} color="text-gray-900" href="/admin/candidates" />
+        <StatCard label={`< ${threshold}`} value={stats.pending} color="text-gray-600" href="/admin/candidates?status=pending" />
+        <StatCard label="Approved" value={stats.approved} color="text-green-600" href="/admin/candidates?status=approved" />
+        <StatCard label="Rejected" value={stats.rejected} color="text-red-600" href="/admin/candidates?status=rejected" />
+        <StatCard label="Under Review" value={stats.under_review} color="text-blue-600" href="/admin/candidates?status=under_review" />
       </div>
 
       {/* Score histogram */}

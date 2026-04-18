@@ -2,11 +2,21 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import type { Candidate, CandidateStatus } from '@/lib/types'
 import { statusColor, scoreColor, formatDate, formatStatus } from '@/lib/utils'
 import { DEFAULT_OVERSIGHT_AREAS, DEFAULT_OVERSIGHT_OPTIONS } from '@/lib/types'
 
 const STATUS_OPTIONS: (CandidateStatus | '')[] = ['', 'pending', 'under_review', 'approved', 'rejected']
+const STATUS_FILTERS: CandidateStatus[] = ['pending', 'under_review', 'approved', 'rejected']
+
+interface StatusCounts {
+  all: number
+  pending: number
+  under_review: number
+  approved: number
+  rejected: number
+}
 
 function CandidateAvatar({ url, name, size = 'sm' }: { url: string | null; name: string; size?: 'sm' | 'md' }) {
   const dim = size === 'md' ? 'w-10 h-10' : 'w-8 h-8'
@@ -21,6 +31,33 @@ function CandidateAvatar({ url, name, size = 'sm' }: { url: string | null; name:
     <div className={`${dim} rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0`}>
       <span className={`${textSize} font-medium text-gray-500`}>{name.charAt(0).toUpperCase()}</span>
     </div>
+  )
+}
+
+function StatusStatCard({
+  label,
+  value,
+  active,
+  onClick,
+}: {
+  label: string
+  value: number
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-xl border p-4 text-left shadow-sm transition-colors ${
+        active
+          ? 'border-blue-600 bg-blue-50'
+          : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'
+      }`}
+    >
+      <p className={`text-2xl font-bold ${active ? 'text-blue-700' : 'text-gray-900'}`}>{value}</p>
+      <p className={`text-sm mt-1 ${active ? 'text-blue-700' : 'text-gray-500'}`}>{label}</p>
+    </button>
   )
 }
 
@@ -58,8 +95,16 @@ async function exportPDF(candidates: Candidate[], status: CandidateStatus | '', 
 }
 
 export default function CandidatesPage() {
+  const searchParams = useSearchParams()
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [total, setTotal] = useState(0)
+  const [statusCounts, setStatusCounts] = useState<StatusCounts>({
+    all: 0,
+    pending: 0,
+    under_review: 0,
+    approved: 0,
+    rejected: 0,
+  })
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<CandidateStatus | ''>('')
@@ -72,6 +117,18 @@ export default function CandidatesPage() {
   const [oversightArea, setOversightArea] = useState('')
   const [oversightOptions, setOversightOptions] = useState<string[]>(DEFAULT_OVERSIGHT_OPTIONS)
   const [oversightAreas, setOversightAreas] = useState<string[]>(DEFAULT_OVERSIGHT_AREAS)
+
+  useEffect(() => {
+    const statusFromUrl = searchParams.get('status')
+    if (statusFromUrl && STATUS_FILTERS.includes(statusFromUrl as CandidateStatus)) {
+      setStatus(statusFromUrl as CandidateStatus)
+      setPage(1)
+    }
+    if (!statusFromUrl) {
+      setStatus('')
+      setPage(1)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetch('/api/settings')
@@ -87,6 +144,41 @@ export default function CandidatesPage() {
       })
       .catch(() => {})
   }, [])
+
+  const fetchStatusCounts = useCallback(async () => {
+    async function fetchCount(nextStatus?: CandidateStatus): Promise<number> {
+      const params = new URLSearchParams({ limit: '1', page: '1' })
+      if (search) params.set('search', search)
+      if (oversight) params.set('oversight', oversight)
+      if (oversightArea) params.set('oversight_area', oversightArea)
+      if (nextStatus) params.set('status', nextStatus)
+
+      const res = await fetch(`/api/candidates?${params.toString()}`)
+      if (!res.ok) throw new Error(`Server error: ${res.status}`)
+      const data = await res.json()
+      return Number(data.count ?? 0)
+    }
+
+    try {
+      const [all, pending, underReview, approved, rejected] = await Promise.all([
+        fetchCount(),
+        fetchCount('pending'),
+        fetchCount('under_review'),
+        fetchCount('approved'),
+        fetchCount('rejected'),
+      ])
+
+      setStatusCounts({
+        all,
+        pending,
+        under_review: underReview,
+        approved,
+        rejected,
+      })
+    } catch (err) {
+      console.error('Failed to fetch status counts:', err)
+    }
+  }, [search, oversight, oversightArea])
 
   async function handleExport(format: 'csv' | 'pdf' | 'zip') {
     setExporting(format)
@@ -141,6 +233,10 @@ export default function CandidatesPage() {
     fetchCandidates()
   }, [fetchCandidates])
 
+  useEffect(() => {
+    fetchStatusCounts()
+  }, [fetchStatusCounts])
+
   function toggleSort(field: string) {
     if (sort === field) {
       setOrder(order === 'desc' ? 'asc' : 'desc')
@@ -192,6 +288,39 @@ export default function CandidatesPage() {
       </div>
 
       {/* Filters */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <StatusStatCard
+          label="All"
+          value={statusCounts.all}
+          active={status === ''}
+          onClick={() => { setStatus(''); setPage(1) }}
+        />
+        <StatusStatCard
+          label={`< ${threshold}`}
+          value={statusCounts.pending}
+          active={status === 'pending'}
+          onClick={() => { setStatus('pending'); setPage(1) }}
+        />
+        <StatusStatCard
+          label="Under Review"
+          value={statusCounts.under_review}
+          active={status === 'under_review'}
+          onClick={() => { setStatus('under_review'); setPage(1) }}
+        />
+        <StatusStatCard
+          label="Approved"
+          value={statusCounts.approved}
+          active={status === 'approved'}
+          onClick={() => { setStatus('approved'); setPage(1) }}
+        />
+        <StatusStatCard
+          label="Rejected"
+          value={statusCounts.rejected}
+          active={status === 'rejected'}
+          onClick={() => { setStatus('rejected'); setPage(1) }}
+        />
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <input
           type="text"
