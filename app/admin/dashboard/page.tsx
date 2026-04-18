@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import type { Candidate } from '@/lib/types'
-import { statusColor, formatDate } from '@/lib/utils'
+import { statusColor, formatDate, formatStatus } from '@/lib/utils'
 
 interface Stats {
   total: number
@@ -44,6 +44,7 @@ export default function DashboardPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [threshold, setThreshold] = useState(700)
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -61,6 +62,13 @@ export default function DashboardPage() {
         console.error('Failed to load candidates:', err)
         setLoading(false)
       })
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((s) => { if (s.score_threshold) setThreshold(s.score_threshold) })
+      .catch(() => {})
   }, [])
 
   const stats: Stats = {
@@ -89,7 +97,7 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard label="Total" value={stats.total} color="text-gray-900" />
-        <StatCard label="Pending" value={stats.pending} color="text-gray-600" />
+        <StatCard label={`< ${threshold}`} value={stats.pending} color="text-gray-600" />
         <StatCard label="Approved" value={stats.approved} color="text-green-600" />
         <StatCard label="Rejected" value={stats.rejected} color="text-red-600" />
         <StatCard label="Under Review" value={stats.under_review} color="text-blue-600" />
@@ -150,7 +158,7 @@ export default function DashboardPage() {
                 <td className="px-6 py-3 text-right font-semibold text-gray-900">{c.total_score}</td>
                 <td className="px-6 py-3 text-center">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor(c.status)}`}>
-                    {c.status.replace('_', ' ')}
+                    {formatStatus(c.status, threshold)}
                   </span>
                 </td>
                 <td className="px-6 py-3 text-right text-gray-500">{formatDate(c.created_at)}</td>
@@ -175,7 +183,7 @@ export default function DashboardPage() {
                 <p className="font-medium text-gray-900 text-sm truncate">{c.full_name}</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(c.status)}`}>
-                    {c.status.replace('_', ' ')}
+                      {formatStatus(c.status, threshold)}
                   </span>
 
                 </div>

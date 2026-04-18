@@ -13,6 +13,11 @@ export function formatDate(dateString: string) {
   })
 }
 
+export function formatStatus(status: string, threshold: number): string {
+  if (status === 'pending') return `< ${threshold}`
+  return status.replace('_', ' ')
+}
+
 export function scoreColor(score: number) {
   if (score >= 800) return 'text-green-600'
   if (score >= 400) return 'text-yellow-600'

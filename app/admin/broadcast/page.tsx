@@ -23,6 +23,14 @@ export default function BroadcastPage() {
   const [error, setError] = useState<string | null>(null)
   const [candidateCount, setCandidateCount] = useState<number | null>(null)
   const [confirmed, setConfirmed] = useState(false)
+    const [threshold, setThreshold] = useState(700)
+
+    useEffect(() => {
+      fetch('/api/settings')
+        .then((r) => r.json())
+        .then((s) => { if (s.score_threshold) setThreshold(s.score_threshold) })
+        .catch(() => {})
+    }, [])
 
   // Fetch candidate count for selected filter
   useEffect(() => {
@@ -96,7 +104,7 @@ export default function BroadcastPage() {
               }`}
             >
               <div className={`text-sm font-semibold ${statusFilter === value ? 'text-blue-700' : 'text-gray-800'}`}>
-                {label}
+                 {value === 'pending' ? `< ${threshold}` : label}
               </div>
               <div className="text-xs text-gray-500 mt-0.5">{description}</div>
             </button>

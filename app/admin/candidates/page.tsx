@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import type { Candidate, CandidateStatus } from '@/lib/types'
-import { statusColor, scoreColor, formatDate } from '@/lib/utils'
+import { statusColor, scoreColor, formatDate, formatStatus } from '@/lib/utils'
 
 const STATUS_OPTIONS: (CandidateStatus | '')[] = ['', 'pending', 'under_review', 'approved', 'rejected']
 
@@ -23,7 +23,7 @@ function CandidateAvatar({ url, name, size = 'sm' }: { url: string | null; name:
   )
 }
 
-async function exportPDF(candidates: Candidate[], status: CandidateStatus | '') {
+async function exportPDF(candidates: Candidate[], status: CandidateStatus | '', threshold: number) {
   const [{ jsPDF }, { default: autoTable }] = await Promise.all([
     import('jspdf'),
     import('jspdf-autotable'),
@@ -46,7 +46,7 @@ async function exportPDF(candidates: Candidate[], status: CandidateStatus | '') 
       c.phone_number ?? '',
       c.oversight ?? '',
       c.total_score,
-      c.status.replace('_', ' '),
+      formatStatus(c.status, threshold),
       formatDate(c.created_at),
     ]),
     alternateRowStyles: { fillColor: [248, 250, 252] },
@@ -66,12 +66,20 @@ export default function CandidatesPage() {
   const [order, setOrder] = useState('desc')
   const [page, setPage] = useState(1)
   const [exporting, setExporting] = useState<'csv' | 'pdf' | 'zip' | null>(null)
+  const [threshold, setThreshold] = useState(700)
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((s) => { if (s.score_threshold) setThreshold(s.score_threshold) })
+      .catch(() => {})
+  }, [])
 
   async function handleExport(format: 'csv' | 'pdf' | 'zip') {
     setExporting(format)
     try {
       if (format === 'pdf') {
-        await exportPDF(candidates, status)
+        await exportPDF(candidates, status, threshold)
       } else {
         const params = new URLSearchParams()
         if (status) params.set('status', status)
@@ -176,7 +184,7 @@ export default function CandidatesPage() {
         >
           {STATUS_OPTIONS.map((s) => (
             <option key={s} value={s}>
-              {s === '' ? 'All statuses' : s.replace('_', ' ')}
+              {s === '' ? 'All statuses' : formatStatus(s, threshold)}
             </option>
           ))}
         </select>
@@ -212,7 +220,7 @@ export default function CandidatesPage() {
                 </td>
                 <td className="px-6 py-3 text-center">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor(c.status)}`}>
-                    {c.status.replace('_', ' ')}
+                    {formatStatus(c.status, threshold)}
                   </span>
                 </td>
                 <td className="px-6 py-3 text-right text-gray-500">{formatDate(c.created_at)}</td>
@@ -247,7 +255,7 @@ export default function CandidatesPage() {
               <p className="font-medium text-gray-900 text-sm truncate">{c.full_name}</p>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(c.status)}`}>
-                  {c.status.replace('_', ' ')}
+                  {formatStatus(c.status, threshold)}
                 </span>
 
                 <span className="text-xs text-gray-400">{formatDate(c.created_at)}</span>

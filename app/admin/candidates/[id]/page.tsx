@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import type { Candidate, CandidateStatus } from '@/lib/types'
 import { calculateScore } from '@/lib/scoring'
-import { statusColor, formatDate } from '@/lib/utils'
+import { statusColor, formatDate, formatStatus } from '@/lib/utils'
 
 const STATUS_OPTIONS: CandidateStatus[] = ['pending', 'under_review', 'approved', 'rejected']
 
@@ -41,11 +41,19 @@ export default function CandidateDetailPage() {
   const router = useRouter()
   const [candidate, setCandidate] = useState<Candidate | null>(null)
   const [loading, setLoading] = useState(true)
+  const [threshold, setThreshold] = useState(700)
   const [saving, setSaving] = useState(false)
   const [notes, setNotes] = useState('')
   const [status, setStatus] = useState<CandidateStatus>('pending')
   const [saved, setSaved] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((s) => { if (s.score_threshold) setThreshold(s.score_threshold) })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     fetch(`/api/candidates/${id}`)
@@ -249,7 +257,7 @@ export default function CandidateDetailPage() {
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>{s.replace('_', ' ')}</option>
+              <option key={s} value={s}>{formatStatus(s, threshold)}</option>
             ))}
           </select>
         </div>
