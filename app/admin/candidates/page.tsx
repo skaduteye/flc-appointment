@@ -7,6 +7,22 @@ import { statusColor, scoreColor, formatDate } from '@/lib/utils'
 
 const STATUS_OPTIONS: (CandidateStatus | '')[] = ['', 'pending', 'under_review', 'approved', 'rejected']
 
+function CandidateAvatar({ url, name, size = 'sm' }: { url: string | null; name: string; size?: 'sm' | 'md' }) {
+  const dim = size === 'md' ? 'w-10 h-10' : 'w-8 h-8'
+  const textSize = size === 'md' ? 'text-sm' : 'text-xs'
+  return url ? (
+    <img
+      src={`/api/photos/${url}`}
+      alt=""
+      className={`${dim} rounded-full object-cover shrink-0 border border-gray-200`}
+    />
+  ) : (
+    <div className={`${dim} rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0`}>
+      <span className={`${textSize} font-medium text-gray-500`}>{name.charAt(0).toUpperCase()}</span>
+    </div>
+  )
+}
+
 async function exportPDF(candidates: Candidate[], status: CandidateStatus | '') {
   const [{ jsPDF }, { default: autoTable }] = await Promise.all([
     import('jspdf'),
@@ -187,7 +203,12 @@ export default function CandidatesPage() {
               <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-400">No candidates found</td></tr>
             ) : candidates.map((c) => (
               <tr key={c.id} className="hover:bg-gray-50">
-                <td className="px-6 py-3 font-medium text-gray-900">{c.full_name}</td>
+                <td className="px-6 py-3">
+                  <div className="flex items-center gap-3">
+                    <CandidateAvatar url={c.photo_url} name={c.full_name} />
+                    <span className="font-medium text-gray-900">{c.full_name}</span>
+                  </div>
+                </td>
                 <td className={`px-6 py-3 text-right font-bold ${scoreColor(c.total_score, c.is_disqualified)}`}>
                   {c.total_score}
                 </td>
@@ -228,9 +249,10 @@ export default function CandidatesPage() {
           <Link
             key={c.id}
             href={`/admin/candidates/${c.id}`}
-            className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm"
+            className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm"
           >
-            <div className="min-w-0">
+            <CandidateAvatar url={c.photo_url} name={c.full_name} size="md" />
+            <div className="min-w-0 flex-1">
               <p className="font-medium text-gray-900 text-sm truncate">{c.full_name}</p>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(c.status)}`}>

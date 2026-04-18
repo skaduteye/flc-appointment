@@ -93,13 +93,13 @@ function WeightInput({
   onChange: (field: keyof ScoringWeights, val: number) => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <label className="text-sm text-gray-700 flex-1">{label}</label>
+    <div className="flex items-center gap-2 flex-wrap">
+      <label className="text-sm text-gray-700 flex-1 min-w-0">{label}</label>
       <input
         type="number"
         value={weights[field]}
         onChange={(e) => onChange(field, Number(e.target.value))}
-        className="w-24 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-24 shrink-0 border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
   )
@@ -119,9 +119,9 @@ function RateCapRow({
   onChange: (field: keyof ScoringWeights, val: number) => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <label className="text-sm text-gray-700 flex-1">{label}</label>
-      <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
+      <label className="text-sm text-gray-700 flex-1 min-w-0">{label}</label>
+      <div className="flex items-center gap-2 shrink-0">
         <div className="flex items-center gap-1">
           <span className="text-xs text-gray-500">×</span>
           <input
@@ -237,8 +237,8 @@ export default function SettingsPage() {
         saving={saving === 'threshold'}
         savedMsg={savedMsg.threshold}
       >
-        <div className="flex items-center gap-4">
-          <label className="text-sm text-gray-700 flex-1">Minimum score for Under Review</label>
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="text-sm text-gray-700 flex-1 min-w-0">Minimum score for Under Review</label>
           <input
             type="number"
             min={0}
@@ -246,7 +246,7 @@ export default function SettingsPage() {
             onChange={(e) =>
               setSettings({ ...settings, score_threshold: Number(e.target.value) })
             }
-            className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-32 shrink-0 border border-gray-300 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </Section>
@@ -259,8 +259,8 @@ export default function SettingsPage() {
         saving={saving === 'adminphone'}
         savedMsg={savedMsg.adminphone}
       >
-        <div className="flex items-center gap-4">
-          <label className="text-sm text-gray-700 flex-1">Phone number (Ghana format, e.g. 0241234567)</label>
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="text-sm text-gray-700 flex-1 min-w-0">Phone number (Ghana format, e.g. 0241234567)</label>
           <input
             type="tel"
             value={settings.admin_phone ?? ''}
@@ -268,7 +268,7 @@ export default function SettingsPage() {
             onChange={(e) =>
               setSettings({ ...settings, admin_phone: e.target.value || null })
             }
-            className="w-40 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-40 shrink-0 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </Section>
@@ -398,8 +398,8 @@ function WeightsEditor({
       </WeightGroup>
 
       <WeightGroup title="C — Loyalty & Service">
-        <div className="text-xs text-gray-500 grid grid-cols-2 gap-x-4 font-medium pb-1">
-          <span></span>
+        <div className="hidden sm:flex text-xs text-gray-500 gap-x-4 font-medium pb-1">
+          <span className="flex-1"></span>
           <div className="flex justify-end gap-8 pr-1">
             <span>× rate</span>
             <span>cap pts</span>

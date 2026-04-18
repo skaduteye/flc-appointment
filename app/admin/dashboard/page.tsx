@@ -44,6 +44,9 @@ function StatCard({ label, value, color }: { label: string; value: number; color
 export default function DashboardPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     fetch('/api/candidates?limit=200&sort=created_at&order=desc')
@@ -97,21 +100,25 @@ export default function DashboardPage() {
       {/* Score histogram */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <h2 className="font-semibold text-gray-900 mb-4">Score Distribution</h2>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={histogram} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-            <XAxis dataKey="range" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-            <Tooltip />
-            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-              {histogram.map((entry) => (
-                <Cell
-                  key={entry.range}
-                  fill={entry.range === '<0' ? '#ef4444' : entry.min >= 800 ? '#16a34a' : '#3b82f6'}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        {mounted ? (
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={histogram} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+              <XAxis dataKey="range" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                {histogram.map((entry) => (
+                  <Cell
+                    key={entry.range}
+                    fill={entry.range === '<0' ? '#ef4444' : entry.min >= 800 ? '#16a34a' : '#3b82f6'}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-[200px]" />
+        )}
       </div>
 
       {/* Recent submissions */}
