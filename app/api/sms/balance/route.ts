@@ -25,7 +25,7 @@ export async function GET() {
     }
 
     const json = await res.json()
-    if (json.status !== 'success') {
+    if (!json.success) {
       return NextResponse.json({ error: json.error ?? `HTTP ${res.status}` }, { status: 502 })
     }
     return NextResponse.json({ balance: json.data.balance })

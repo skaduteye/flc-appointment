@@ -44,46 +44,50 @@ export async function sendSms(
   message: string,
   campaignName?: string,
 ): Promise<SendResult> {
-  let recipientsSent = 0
-
+  // Validate and normalise all numbers first
+  const validPhones: string[] = []
   for (const recipient of recipients) {
-    try {
-      const phone = normaliseGhanaPhone(recipient)
-      if (!isValidGhanaPhone(phone)) {
-        return { success: false, error: `Invalid phone number: ${recipient}` }
-      }
-      const intlPhone = '+233' + phone.slice(1)
-
-      const res = await fetch(`${BASE_URL}/sms/send`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          to: intlPhone,
-          message,
-          sender_id: getSenderId(),
-        }),
-      })
-
-      const contentType = res.headers.get('content-type') ?? ''
-      if (!contentType.includes('application/json')) {
-        const text = await res.text()
-        console.error('FlashSMS returned non-JSON:', res.status, text.slice(0, 200))
-        return { success: false, error: `FlashSMS returned HTTP ${res.status} (non-JSON)` }
-      }
-
-      const json = await res.json()
-      if (json.status !== 'success') {
-        console.error('FlashSMS sendSms error:', JSON.stringify(json))
-        return { success: false, error: json.error ?? `HTTP ${res.status}` }
-      }
-
-      recipientsSent++
-    } catch (err) {
-      return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+    const phone = normaliseGhanaPhone(recipient)
+    if (!isValidGhanaPhone(phone)) {
+      return { success: false, error: `Invalid phone number: ${recipient}` }
     }
+    validPhones.push(phone)
   }
 
-  return { success: true, recipientsSent }
+  try {
+    const res = await fetch(`${BASE_URL}/sms/send`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        recipients: validPhones,
+        message,
+        senderId: getSenderId(),
+        ...(campaignName ? { campaignName } : {}),
+      }),
+    })
+
+    const contentType = res.headers.get('content-type') ?? ''
+    if (!contentType.includes('application/json')) {
+      const text = await res.text()
+      console.error('FlashSMS returned non-JSON:', res.status, text.slice(0, 200))
+      return { success: false, error: `FlashSMS returned HTTP ${res.status} (non-JSON)` }
+    }
+
+    const json = await res.json()
+    if (!json.success) {
+      console.error('FlashSMS sendSms error:', JSON.stringify(json))
+      return { success: false, error: json.error ?? `HTTP ${res.status}` }
+    }
+
+    return {
+      success: true,
+      messageId: json.data?.messageId,
+      recipientsSent: json.data?.recipientsSent,
+      creditsUsed: json.data?.creditsUsed,
+    }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
 }
 
 export async function sendSmsToGroup(
@@ -98,7 +102,8 @@ export async function sendSmsToGroup(
       body: JSON.stringify({
         groupId,
         message,
-        sender_id: getSenderId(),
+        senderId: getSenderId(),
+        ...(campaignName ? { campaignName } : {}),
       }),
     })
 
@@ -110,10 +115,12 @@ export async function sendSmsToGroup(
     }
 
     const json = await res.json()
-    if (json.status !== 'success') return { success: false, error: json.error }
+    if (!json.success) return { success: false, error: json.error }
     return {
       success: true,
-      messageId: json.message_id,
+      messageId: json.data?.messageId,
+      recipientsSent: json.data?.recipientsSent,
+      creditsUsed: json.data?.creditsUsed,
     }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
