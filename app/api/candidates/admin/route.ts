@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { CandidateStatus } from '@/lib/types'
 import { requireApiUser } from '@/lib/api-auth'
+import {
+  invalidateOlderDuplicates,
+  normalizeIdentityForDedup,
+  normalizePhoneForDedup,
+} from '@/lib/duplicates'
 
 function getAdminClient() {
   return createClient(
@@ -63,6 +68,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'total_score must be a non-negative number' }, { status: 400 })
   }
   const totalScore = Math.round(totalScoreRaw)
+  const phoneNumber = asNullable(body.phone_number)
+  const normalizedPhone = normalizePhoneForDedup(phoneNumber)
+  const identityKey = normalizeIdentityForDedup(fullName, surname)
 
   const supabase = getAdminClient()
   const { data, error } = await supabase
@@ -70,7 +78,9 @@ export async function POST(req: NextRequest) {
     .insert({
       full_name: fullName,
       surname,
-      phone_number: asNullable(body.phone_number),
+      phone_number: phoneNumber,
+      phone_number_normalized: normalizedPhone,
+      dedup_identity_key: identityKey,
       oversight: asNullable(body.oversight),
       oversight_area: asNullable(body.oversight_area),
       gender,
@@ -78,12 +88,21 @@ export async function POST(req: NextRequest) {
       status,
       admin_notes: asNullable(body.admin_notes),
       is_disqualified: false,
+      is_duplicate: false,
+      is_invalid: false,
+      duplicate_of_id: null,
     })
     .select('id')
     .single()
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  try {
+    await invalidateOlderDuplicates(supabase, data.id, normalizedPhone, identityKey)
+  } catch (dupErr) {
+    console.error('Duplicate invalidation error:', dupErr)
   }
 
   return NextResponse.json({ id: data.id }, { status: 201 })

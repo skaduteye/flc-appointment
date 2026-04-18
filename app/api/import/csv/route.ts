@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { calculateScore } from '@/lib/scoring'
 import { getAllSettings } from '@/lib/settings'
+import {
+  invalidateOlderDuplicates,
+  normalizeIdentityForDedup,
+  normalizePhoneForDedup,
+} from '@/lib/duplicates'
 import { requireApiUser } from '@/lib/api-auth'
 
 function getAdminClient() {
@@ -159,12 +164,32 @@ export async function POST(req: NextRequest) {
       if (!record.full_name) { skipped++; continue }
 
       const { total, isDisqualified } = calculateScore(record as never, settings.scoring_weights)
+      const normalizedPhone = normalizePhoneForDedup(record.phone_number as string | null)
+      const identityKey = normalizeIdentityForDedup(
+        record.full_name as string | null,
+        record.surname as string | null,
+      )
       record.total_score = total
       record.is_disqualified = isDisqualified
+      record.phone_number_normalized = normalizedPhone
+      record.dedup_identity_key = identityKey
+      record.is_duplicate = false
+      record.is_invalid = false
+      record.duplicate_of_id = null
       record.status = 'pending'
       record.sheet_row_id = `csv_import_${Date.now()}_${inserted}`
 
-      await supabase.from('candidates').insert(record)
+      const { data: insertedRow, error: insertError } = await supabase
+        .from('candidates')
+        .insert(record)
+        .select('id')
+        .single()
+
+      if (insertError) {
+        throw insertError
+      }
+
+      await invalidateOlderDuplicates(supabase, insertedRow.id, normalizedPhone, identityKey)
       inserted++
     } catch (err) {
       errors.push(err instanceof Error ? err.message : 'Row error')

@@ -109,6 +109,7 @@ export interface Candidate {
   is_invalid: boolean
   duplicate_of_id: string | null
   phone_number_normalized: string | null
+  dedup_identity_key: string | null
   status: CandidateStatus
   admin_notes: string | null
   sheet_row_id: string | null
@@ -117,7 +118,7 @@ export interface Candidate {
 
 export type CandidateInput = Omit<Candidate,
   'id' | 'created_at' | 'updated_at' | 'total_score' | 'is_disqualified' | 'is_duplicate' | 'is_invalid' |
-  'duplicate_of_id' | 'phone_number_normalized' | 'status' | 'admin_notes' |
+  'duplicate_of_id' | 'phone_number_normalized' | 'dedup_identity_key' | 'status' | 'admin_notes' |
   'sheet_row_id' | 'last_synced_at' | 'sms_sent_at' | 'sms_message_id'
 > & { sheet_row_id?: string | null }
 

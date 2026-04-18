@@ -7,6 +7,11 @@ import {
   buildSubmissionMessage,
   isValidGhanaPhone,
 } from '@/lib/sms'
+import {
+  invalidateOlderDuplicates,
+  normalizeIdentityForDedup,
+  normalizePhoneForDedup,
+} from '@/lib/duplicates'
 import type { CandidateInput, CandidateStatus } from '@/lib/types'
 import { requireApiUser } from '@/lib/api-auth'
 import { checkRateLimit } from '@/lib/rate-limit'
@@ -60,14 +65,21 @@ export async function POST(req: NextRequest) {
   const settings = await getAllSettings()
   const { total, isDisqualified } = calculateScore(body, settings.scoring_weights)
   const autoStatus = resolveAutoStatus(total, settings.score_threshold)
+  const normalizedPhone = normalizePhoneForDedup(body.phone_number)
+  const identityKey = normalizeIdentityForDedup(body.full_name, body.surname)
 
   const supabase = getAdminClient()
   const { data, error } = await supabase
     .from('candidates')
     .insert({
       ...body,
+      phone_number_normalized: normalizedPhone,
+      dedup_identity_key: identityKey,
       total_score: total,
       is_disqualified: isDisqualified,
+      is_duplicate: false,
+      is_invalid: false,
+      duplicate_of_id: null,
       status: autoStatus,
     })
     .select('*')
@@ -76,6 +88,12 @@ export async function POST(req: NextRequest) {
   if (error) {
     console.error('Insert error:', error.message, error.details, error.hint)
     return NextResponse.json({ error: `Failed to save candidate: ${error.message}` }, { status: 500 })
+  }
+
+  try {
+    await invalidateOlderDuplicates(supabase, data.id, normalizedPhone, identityKey)
+  } catch (dupErr) {
+    console.error('Duplicate invalidation error:', dupErr)
   }
 
   await sendNotifications(data)
