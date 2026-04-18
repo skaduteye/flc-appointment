@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { OVERSIGHT_OPTIONS, OVERSIGHT_AREA_OPTIONS } from '@/lib/types'
+import { DEFAULT_OVERSIGHT_OPTIONS, DEFAULT_OVERSIGHT_AREAS } from '@/lib/types'
 import { isValidGhanaPhone } from '@/lib/sms'
 import type { CandidateInput } from '@/lib/types'
 
@@ -283,6 +283,22 @@ export default function ApplyPage() {
   const [form, setForm] = useState<CandidateInput>(defaultValues)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [oversightOptions, setOversightOptions] = useState<string[]>(DEFAULT_OVERSIGHT_OPTIONS)
+  const [oversightAreas, setOversightAreas] = useState<string[]>(DEFAULT_OVERSIGHT_AREAS)
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((s) => {
+        if (Array.isArray(s.oversight_options) && s.oversight_options.length > 0) {
+          setOversightOptions(s.oversight_options)
+        }
+        if (Array.isArray(s.oversight_areas) && s.oversight_areas.length > 0) {
+          setOversightAreas(s.oversight_areas)
+        }
+      })
+      .catch(() => {/* keep defaults on error */})
+  }, [])
 
   const set = <K extends keyof CandidateInput>(key: K, value: CandidateInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -429,7 +445,7 @@ export default function ApplyPage() {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="">Select your oversight leader…</option>
-                {OVERSIGHT_OPTIONS.map((o) => (
+                {oversightOptions.map((o) => (
                   <option key={o} value={o}>{o}</option>
                 ))}
               </select>
@@ -445,7 +461,7 @@ export default function ApplyPage() {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="">Select your area…</option>
-                {OVERSIGHT_AREA_OPTIONS.map((a) => (
+                {oversightAreas.map((a) => (
                   <option key={a} value={a}>{a}</option>
                 ))}
               </select>

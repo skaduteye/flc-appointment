@@ -14,7 +14,13 @@ export const OVERSIGHT_OPTIONS = [
   'KIKI HEWARD-MILLS',
   'JONATHAN LONGDON',
   'NATHAN KUDOWOR',
+  'PETER ONASIS',
+  'THADDEUS BOADI',
+  'JOHN THOMAS',
 ] as const
+
+/** Mutable defaults used as fallback when the API is unavailable */
+export const DEFAULT_OVERSIGHT_OPTIONS: string[] = [...OVERSIGHT_OPTIONS]
 
 export const OVERSIGHT_AREA_OPTIONS = [
   'AREA 1',
@@ -24,6 +30,9 @@ export const OVERSIGHT_AREA_OPTIONS = [
   'AREA 5 (OTHER CAMPUSES- KOINONIA, PASSION, ENERGY, ETC)',
   'AREA 6 (ASHESI, MIOTSO)',
 ] as const
+
+/** Mutable defaults used as fallback when the API is unavailable */
+export const DEFAULT_OVERSIGHT_AREAS: string[] = [...OVERSIGHT_AREA_OPTIONS]
 
 export interface Candidate {
   id: string
