@@ -13,8 +13,19 @@ export async function GET() {
         'Content-Type': 'application/json',
       },
     })
+
+    const contentType = res.headers.get('content-type') ?? ''
+    if (!contentType.includes('application/json')) {
+      const text = await res.text()
+      console.error('FlashSMS returned non-JSON:', res.status, text.slice(0, 200))
+      return NextResponse.json(
+        { error: `FlashSMS returned HTTP ${res.status} (non-JSON)` },
+        { status: 502 },
+      )
+    }
+
     const json = await res.json()
-    if (!json.success) {
+    if (json.status !== 'success') {
       return NextResponse.json({ error: json.error ?? `HTTP ${res.status}` }, { status: 502 })
     }
     return NextResponse.json({ balance: json.data.balance })
