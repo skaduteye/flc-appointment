@@ -55,13 +55,20 @@ export async function sendSms(
         ...(campaignName ? { campaignName } : {}),
       }),
     })
-    const json = await res.json()
-    if (!json.success) return { success: false, error: json.error }
+    let json: Record<string, unknown>
+    try {
+      json = await res.json()
+    } catch {
+      const text = await res.text().catch(() => '')
+      return { success: false, error: `FlashSMS returned an unexpected response (HTTP ${res.status})${text ? `: ${text.slice(0, 200)}` : ''}` }
+    }
+    if (!json.success) return { success: false, error: (json.error as string | undefined) ?? `HTTP ${res.status}` }
+    const data = json.data as Record<string, unknown>
     return {
       success: true,
-      messageId: json.data.messageId,
-      recipientsSent: json.data.recipientsSent,
-      creditsUsed: json.data.creditsUsed,
+      messageId: data?.messageId as string | undefined,
+      recipientsSent: data?.recipientsSent as number | undefined,
+      creditsUsed: data?.creditsUsed as number | undefined,
     }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
@@ -84,13 +91,20 @@ export async function sendSmsToGroup(
         ...(campaignName ? { campaignName } : {}),
       }),
     })
-    const json = await res.json()
-    if (!json.success) return { success: false, error: json.error }
+    let json: Record<string, unknown>
+    try {
+      json = await res.json()
+    } catch {
+      const text = await res.text().catch(() => '')
+      return { success: false, error: `FlashSMS returned an unexpected response (HTTP ${res.status})${text ? `: ${text.slice(0, 200)}` : ''}` }
+    }
+    if (!json.success) return { success: false, error: (json.error as string | undefined) ?? `HTTP ${res.status}` }
+    const data = json.data as Record<string, unknown>
     return {
       success: true,
-      messageId: json.data.messageId,
-      recipientsSent: json.data.recipientsSent,
-      creditsUsed: json.data.creditsUsed,
+      messageId: data?.messageId as string | undefined,
+      recipientsSent: data?.recipientsSent as number | undefined,
+      creditsUsed: data?.creditsUsed as number | undefined,
     }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
