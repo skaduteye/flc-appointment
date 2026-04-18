@@ -251,28 +251,6 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {/* ── Admin Phone ── */}
-      <Section
-        title="Admin Alert Phone"
-        description="Receives an SMS alert whenever a new candidate submits an application."
-        onSave={() => save('adminphone', { admin_phone: settings.admin_phone })}
-        saving={saving === 'adminphone'}
-        savedMsg={savedMsg.adminphone}
-      >
-        <div className="flex items-center gap-4 flex-wrap">
-          <label className="text-sm text-gray-700 flex-1 min-w-0">Phone number (Ghana format, e.g. 0241234567)</label>
-          <input
-            type="tel"
-            value={settings.admin_phone ?? ''}
-            placeholder="0241234567"
-            onChange={(e) =>
-              setSettings({ ...settings, admin_phone: e.target.value || null })
-            }
-            className="w-40 shrink-0 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </Section>
-
       {/* ── Scoring Weights ── */}
       <Section
         title="Scoring Weights"

@@ -165,15 +165,3 @@ export function buildStatusChangeMessage(
   }
 }
 
-export function buildAdminAlertMessage(
-  c: Pick<Candidate, 'full_name' | 'surname' | 'total_score' | 'is_disqualified'>,
-  autoStatus: CandidateStatus,
-): string {
-  const name = candidateDisplayName(c)
-  const flag = c.is_disqualified ? ' [FLAGGED]' : ''
-  return (
-    `FLC Appointments: New application from ${name}.${flag} ` +
-    `Score: ${c.total_score}/1350. Auto-status: ${autoStatus.replace('_', ' ')}. ` +
-    `Please review. `
-  )
-}

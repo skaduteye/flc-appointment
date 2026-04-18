@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const allowed: (keyof AppSettings)[] = [
-    'oversight_options', 'oversight_areas', 'score_threshold', 'admin_phone', 'scoring_weights',
+    'oversight_options', 'oversight_areas', 'score_threshold', 'scoring_weights',
   ]
 
   for (const key of allowed) {

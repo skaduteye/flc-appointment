@@ -5,7 +5,6 @@ import { getAllSettings } from '@/lib/settings'
 import {
   sendSms,
   buildSubmissionMessage,
-  buildAdminAlertMessage,
   isValidGhanaPhone,
 } from '@/lib/sms'
 import type { CandidateInput, CandidateStatus } from '@/lib/types'
@@ -57,15 +56,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Failed to save candidate: ${error.message}` }, { status: 500 })
   }
 
-  await sendNotifications(data, autoStatus, settings.admin_phone)
+  await sendNotifications(data)
 
   return NextResponse.json({ id: data.id }, { status: 201 })
 }
 
 async function sendNotifications(
-  candidate: { id: string; full_name: string; surname: string; total_score: number; is_disqualified: boolean; phone_number: string | null },
-  autoStatus: CandidateStatus,
-  adminPhone: string | null,
+  candidate: { id: string; full_name: string; surname: string; total_score: number; phone_number: string | null },
 ) {
   const supabase = getAdminClient()
   const updates: Record<string, unknown> = {}
@@ -82,15 +79,7 @@ async function sendNotifications(
     }
   }
 
-  // 2. Admin alert — settings DB value takes priority over env var fallback
-  const alertPhone = adminPhone || process.env.ADMIN_PHONE_NUMBER
-  if (alertPhone) {
-    const msg = buildAdminAlertMessage(candidate, autoStatus)
-    const result = await sendSms([alertPhone], msg, 'Admin New Application')
-    if (!result.success) console.error('Admin SMS failed:', result.error)
-  }
-
-  // Save SMS tracking back to DB if we have updates
+  // Save candidate SMS tracking back to DB if we have updates
   if (Object.keys(updates).length > 0) {
     await supabase.from('candidates').update(updates).eq('id', candidate.id)
   }
