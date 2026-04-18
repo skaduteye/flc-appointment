@@ -17,11 +17,16 @@ interface Stats {
 function buildHistogram(candidates: Candidate[]) {
   const buckets = [
     { range: '<0', min: -Infinity, max: 0, count: 0 },
-    { range: '0–200', min: 0, max: 200, count: 0 },
-    { range: '200–400', min: 200, max: 400, count: 0 },
-    { range: '400–600', min: 400, max: 600, count: 0 },
-    { range: '600–800', min: 600, max: 800, count: 0 },
-    { range: '800–1000', min: 800, max: 1000, count: 0 },
+    { range: '0–100', min: 0, max: 100, count: 0 },
+    { range: '100–200', min: 100, max: 200, count: 0 },
+    { range: '200–300', min: 200, max: 300, count: 0 },
+    { range: '300–400', min: 300, max: 400, count: 0 },
+    { range: '400–500', min: 400, max: 500, count: 0 },
+    { range: '500–600', min: 500, max: 600, count: 0 },
+    { range: '600–700', min: 600, max: 700, count: 0 },
+    { range: '700–800', min: 700, max: 800, count: 0 },
+    { range: '800–900', min: 800, max: 900, count: 0 },
+    { range: '900–1000', min: 900, max: 1000, count: 0 },
     { range: '1000+', min: 1000, max: Infinity, count: 0 },
   ]
   candidates.forEach((c) => {

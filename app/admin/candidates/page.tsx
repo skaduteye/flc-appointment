@@ -249,7 +249,7 @@ export default function CandidatesPage() {
                 <td className="px-6 py-3">
                   <div className="flex items-center gap-3">
                     <CandidateAvatar url={c.photo_url} name={c.full_name} />
-                    <span className="font-medium text-gray-900">{c.full_name}</span>
+                    <span className="font-medium text-gray-900">{`${c.full_name} ${c.surname}`.trim()}</span>
                   </div>
                 </td>
                 <td className={`px-6 py-3 text-right font-bold ${scoreColor(c.total_score)}`}>
@@ -289,7 +289,7 @@ export default function CandidatesPage() {
           >
             <CandidateAvatar url={c.photo_url} name={c.full_name} size="md" />
             <div className="min-w-0 flex-1">
-              <p className="font-medium text-gray-900 text-sm truncate">{c.full_name}</p>
+              <p className="font-medium text-gray-900 text-sm truncate">{`${c.full_name} ${c.surname}`.trim()}</p>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(c.status)}`}>
                   {formatStatus(c.status, threshold)}
