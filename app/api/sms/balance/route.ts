@@ -10,7 +10,6 @@ export async function GET() {
     const res = await fetch('https://app.flashsms.africa/api/v1/balance', {
       headers: {
         Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
       },
     })
 
