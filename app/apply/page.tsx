@@ -604,7 +604,7 @@ export default function ApplyPage() {
               onChange={(v) => set('volunteers_in_church_offices', v)}
             />
             <NumberInput
-              label="Number of years as a full-time worker"
+              label="Number of years as a full-time ministry worker"
               value={form.years_fulltime_worker}
               onChange={(v) => set('years_fulltime_worker', v)}
               hint="Enter 0 if none. Score: 5pts/year, max 20pts."

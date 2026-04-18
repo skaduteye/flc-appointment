@@ -17,7 +17,11 @@ export default function Home() {
       <div className="flex-1 flex flex-col items-center justify-center px-4">
         <div className="max-w-xl w-full text-center space-y-8">
           <div className="space-y-3">
-            <p className="text-blue-300 text-sm font-semibold uppercase tracking-widest">First Love Church</p>
+            <img
+              src="/icons/icon-192x192.png"
+              alt="First Love Church"
+              className="h-14 w-14 object-contain mx-auto"
+            />
             <h1 className="text-4xl font-bold leading-tight">
               Pastoral Appointment<br />Points Evaluation Portal
             </h1>
