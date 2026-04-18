@@ -44,6 +44,10 @@ export default function AdminNav() {
               {label}
             </Link>
           ))}
+          <span className="text-blue-800 select-none">|</span>
+          <Link href="/apply" className="text-blue-300 text-sm hover:text-white transition-colors">
+            View Form ↗
+          </Link>
           <button onClick={handleLogout} className="text-blue-300 text-sm hover:text-white transition-colors">
             Sign out
           </button>
@@ -76,9 +80,18 @@ export default function AdminNav() {
               {label}
             </Link>
           ))}
-          <button onClick={handleLogout} className="block py-2 text-blue-300 text-sm w-full text-left">
-            Sign out
-          </button>
+          <div className="border-t border-blue-800 mt-1 pt-2 space-y-1">
+            <Link
+              href="/apply"
+              onClick={() => setOpen(false)}
+              className="block py-2 text-blue-300 text-sm"
+            >
+              View Form ↗
+            </Link>
+            <button onClick={handleLogout} className="block py-2 text-blue-300 text-sm w-full text-left">
+              Sign out
+            </button>
+          </div>
         </div>
       )}
     </nav>

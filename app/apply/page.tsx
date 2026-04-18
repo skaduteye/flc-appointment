@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { DEFAULT_OVERSIGHT_OPTIONS, DEFAULT_OVERSIGHT_AREAS } from '@/lib/types'
 import { isValidGhanaPhone } from '@/lib/sms'
@@ -346,10 +347,16 @@ export default function ApplyPage() {
       {/* Header */}
       <div className="bg-blue-950 text-white px-4 py-5">
         <div className="max-w-2xl mx-auto">
-          <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1">
-            First Love Church — UO-FLC190
-          </p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest">
+              First Love Church — UO-FLC190
+            </p>
+            <Link href="/" className="text-blue-400 text-xs hover:text-white transition-colors">
+              ← Home
+            </Link>
+          </div>
           <h1 className="text-xl font-bold">Pastoral Appointment Application</h1>
+          {/* Progress bar */}
           <div className="mt-4 flex gap-0.5">
             {SECTIONS.map((s, i) => (
               <div
@@ -360,9 +367,31 @@ export default function ApplyPage() {
               />
             ))}
           </div>
-          <p className="text-blue-300 text-xs mt-2">
-            {SECTIONS[step].label}{SECTIONS[step].cat ? `: ${SECTIONS[step].cat}` : ''} — Step {step + 1} of {SECTIONS.length}
-          </p>
+          {/* Clickable step labels */}
+          <div className="mt-2 flex gap-1 overflow-x-auto pb-0.5">
+            {SECTIONS.map((s, i) => (
+              <button
+                key={s.label}
+                type="button"
+                onClick={() => {
+                  if (i < step) {
+                    setError('')
+                    setStep(i)
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }
+                }}
+                className={`shrink-0 text-xs px-2.5 py-1 rounded-md transition-colors ${
+                  i === step
+                    ? 'bg-blue-700 text-white font-semibold'
+                    : i < step
+                    ? 'bg-blue-900 text-green-300 hover:bg-blue-800 cursor-pointer'
+                    : 'text-blue-800 cursor-default'
+                }`}
+              >
+                {i < step ? '✓ ' : ''}{s.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -764,14 +793,22 @@ export default function ApplyPage() {
 
         {/* Navigation */}
         <div className="flex justify-between pt-4">
-          <button
-            type="button"
-            onClick={() => { setError(''); setStep((s) => s - 1) }}
-            disabled={step === 0}
-            className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            Back
-          </button>
+          {step === 0 ? (
+            <Link
+              href="/"
+              className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors"
+            >
+              ← Home
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { setError(''); setStep((s) => s - 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+              className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors"
+            >
+              ← Back
+            </button>
+          )}
 
           {step < SECTIONS.length - 1 ? (
             <button
@@ -781,6 +818,7 @@ export default function ApplyPage() {
                 if (validationError) { setError(validationError); return }
                 setError('')
                 setStep((s) => s + 1)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
               }}
               className="px-6 py-2.5 rounded-lg bg-blue-700 text-white text-sm font-semibold hover:bg-blue-800 transition-colors"
             >
