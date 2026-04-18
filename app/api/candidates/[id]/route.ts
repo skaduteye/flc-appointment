@@ -50,15 +50,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const hasScoreField = scoreFields.some(f => f in body)
   let updates: Record<string, unknown> = { ...body }
+  let existingStatus: string | undefined
 
   if (hasScoreField) {
     const { data: existing } = await supabase.from('candidates').select('*').eq('id', id).single()
     if (existing) {
+      existingStatus = existing.status
       const merged = { ...existing, ...body } as CandidateInput
       const { total, isDisqualified } = calculateScore(merged)
       updates = { ...updates, total_score: total, is_disqualified: isDisqualified }
     }
   }
+
+  // Fetch current status before applying the update so we can detect changes
+  const newStatus = updates.status as CandidateStatus | undefined
+  const prevStatus = newStatus
+    ? (existingStatus ?? (await supabase.from('candidates').select('status').eq('id', id).single())?.data?.status)
+    : undefined
 
   const { data, error } = await supabase
     .from('candidates')
@@ -68,10 +76,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  // Send SMS if status changed to a notifiable value
-  const newStatus = updates.status as CandidateStatus | undefined
-  const prevStatus = (await supabase.from('candidates').select('status').eq('id', id).single())?.data?.status
   if (
     newStatus &&
     newStatus !== prevStatus &&
