@@ -742,7 +742,7 @@ export default function ApplyPage() {
               <ReviewRow q="Years of membership in UO" a={form.years_of_membership} />
               <ReviewRow q="Times volunteered at special programs" a={form.volunteer_times} />
               <ReviewRow q="Volunteered in church offices on a lay basis?" a={form.volunteers_in_church_offices} />
-              <ReviewRow q="Years as a full-time worker" a={form.years_fulltime_worker} />
+              <ReviewRow q="Years as a full-time ministry worker (not secular work)" a={form.years_fulltime_worker} />
               <ReviewRow q="Are you in full-time ministry?" a={form.is_fulltime_ministry} />
               <ReviewRow q="Are you a missionary?" a={form.is_missionary} />
               <ReviewRow q="Are you a missionary wife?" a={form.is_missionary_wife} />

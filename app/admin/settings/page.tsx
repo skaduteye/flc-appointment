@@ -386,7 +386,7 @@ function WeightsEditor({
         {rc('Years of UO membership', 'years_of_membership_rate', 'years_of_membership_cap')}
         {rc('Times volunteered at programs', 'volunteer_times_rate', 'volunteer_times_cap')}
         {wi('Volunteers in church offices', 'volunteers_in_church_offices')}
-        {rc('Years as full-time worker', 'years_fulltime_worker_rate', 'years_fulltime_worker_cap')}
+        {rc('Years as full-time ministry worker (not secular work)', 'years_fulltime_worker_rate', 'years_fulltime_worker_cap')}
         {wi('In full-time ministry', 'is_fulltime_ministry')}
         {wi('Is a missionary', 'is_missionary')}
         {wi('Is a missionary wife', 'is_missionary_wife')}

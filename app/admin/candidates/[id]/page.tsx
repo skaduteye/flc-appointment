@@ -211,7 +211,7 @@ export default function CandidateDetailPage() {
         <Row label="Years of UO membership" value={candidate.years_of_membership} />
         <Row label="Times volunteered at special programs" value={candidate.volunteer_times} />
         <Row label="Volunteers in church offices (lay basis)?" value={candidate.volunteers_in_church_offices} />
-        <Row label="Years as full-time worker" value={candidate.years_fulltime_worker} />
+        <Row label="Years as full-time ministry worker (not secular work)" value={candidate.years_fulltime_worker} />
         <Row label="In full-time ministry?" value={candidate.is_fulltime_ministry} />
         <Row label="Is a missionary?" value={candidate.is_missionary} />
         <Row label="Is a missionary wife?" value={candidate.is_missionary_wife} />
