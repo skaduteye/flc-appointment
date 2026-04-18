@@ -12,6 +12,7 @@ interface Stats {
   approved: number
   rejected: number
   under_review: number
+  invalid: number
 }
 
 function buildHistogram(candidates: Candidate[]) {
@@ -60,6 +61,7 @@ function StatCard({
 
 export default function DashboardPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([])
+  const [invalidCount, setInvalidCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [threshold, setThreshold] = useState(700)
@@ -67,13 +69,17 @@ export default function DashboardPage() {
   useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
-    fetch('/api/candidates?limit=200&sort=created_at&order=desc')
-      .then((r) => {
-        if (!r.ok) throw new Error(`Server error: ${r.status}`)
-        return r.json()
-      })
-      .then((d) => {
-        setCandidates(d.data ?? [])
+    Promise.all([
+      fetch('/api/candidates?limit=200&sort=created_at&order=desc'),
+      fetch('/api/candidates?limit=1&page=1&invalid=1'),
+    ])
+      .then(async ([activeRes, invalidRes]) => {
+        if (!activeRes.ok) throw new Error(`Server error: ${activeRes.status}`)
+        if (!invalidRes.ok) throw new Error(`Server error: ${invalidRes.status}`)
+
+        const [activeData, invalidData] = await Promise.all([activeRes.json(), invalidRes.json()])
+        setCandidates(activeData.data ?? [])
+        setInvalidCount(Number(invalidData.count ?? 0))
         setLoading(false)
       })
       .catch((err) => {
@@ -95,6 +101,7 @@ export default function DashboardPage() {
     approved: candidates.filter((c) => c.status === 'approved').length,
     rejected: candidates.filter((c) => c.status === 'rejected').length,
     under_review: candidates.filter((c) => c.status === 'under_review').length,
+    invalid: invalidCount,
 
   }
 
@@ -119,6 +126,7 @@ export default function DashboardPage() {
         <StatCard label="Approved" value={stats.approved} color="text-green-600" href="/admin/candidates?status=approved" />
         <StatCard label="Rejected" value={stats.rejected} color="text-red-600" href="/admin/candidates?status=rejected" />
         <StatCard label="Under Review" value={stats.under_review} color="text-blue-600" href="/admin/candidates?status=under_review" />
+        <StatCard label="Invalid Records" value={stats.invalid} color="text-amber-700" href="/admin/candidates?invalid=1" />
       </div>
 
       {/* Score histogram */}

@@ -117,6 +117,7 @@ export async function GET(req: NextRequest) {
 
   const status = searchParams.get('status')
   const search = searchParams.get('search')
+  const invalid = searchParams.get('invalid')
   const oversight = searchParams.get('oversight')
   const oversightArea = searchParams.get('oversight_area')
   const sort = searchParams.get('sort') ?? 'total_score'
@@ -126,6 +127,12 @@ export async function GET(req: NextRequest) {
   const offset = (page - 1) * limit
 
   let query = supabase.from('candidates').select('*', { count: 'exact' })
+
+  if (invalid === '1') {
+    query = query.eq('is_invalid', true)
+  } else {
+    query = query.eq('is_invalid', false)
+  }
 
   if (status) query = query.eq('status', status)
   if (search) {

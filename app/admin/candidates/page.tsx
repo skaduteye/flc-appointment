@@ -16,6 +16,7 @@ interface StatusCounts {
   under_review: number
   approved: number
   rejected: number
+  invalid: number
 }
 
 function CandidateAvatar({ url, name, size = 'sm' }: { url: string | null; name: string; size?: 'sm' | 'md' }) {
@@ -104,10 +105,12 @@ export default function CandidatesPage() {
     under_review: 0,
     approved: 0,
     rejected: 0,
+    invalid: 0,
   })
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<CandidateStatus | ''>('')
+  const [invalidOnly, setInvalidOnly] = useState(false)
   const [sort, setSort] = useState('total_score')
   const [order, setOrder] = useState('desc')
   const [page, setPage] = useState(1)
@@ -119,12 +122,14 @@ export default function CandidatesPage() {
   const [oversightAreas, setOversightAreas] = useState<string[]>(DEFAULT_OVERSIGHT_AREAS)
 
   useEffect(() => {
+    const invalidFromUrl = searchParams.get('invalid') === '1'
     const statusFromUrl = searchParams.get('status')
+    setInvalidOnly(invalidFromUrl)
     if (statusFromUrl && STATUS_FILTERS.includes(statusFromUrl as CandidateStatus)) {
       setStatus(statusFromUrl as CandidateStatus)
       setPage(1)
     }
-    if (!statusFromUrl) {
+    if (!statusFromUrl || invalidFromUrl) {
       setStatus('')
       setPage(1)
     }
@@ -146,12 +151,13 @@ export default function CandidatesPage() {
   }, [])
 
   const fetchStatusCounts = useCallback(async () => {
-    async function fetchCount(nextStatus?: CandidateStatus): Promise<number> {
+    async function fetchCount(nextStatus?: CandidateStatus, nextInvalidOnly = false): Promise<number> {
       const params = new URLSearchParams({ limit: '1', page: '1' })
       if (search) params.set('search', search)
       if (oversight) params.set('oversight', oversight)
       if (oversightArea) params.set('oversight_area', oversightArea)
       if (nextStatus) params.set('status', nextStatus)
+      if (nextInvalidOnly) params.set('invalid', '1')
 
       const res = await fetch(`/api/candidates?${params.toString()}`)
       if (!res.ok) throw new Error(`Server error: ${res.status}`)
@@ -160,12 +166,13 @@ export default function CandidatesPage() {
     }
 
     try {
-      const [all, pending, underReview, approved, rejected] = await Promise.all([
+      const [all, pending, underReview, approved, rejected, invalid] = await Promise.all([
         fetchCount(),
         fetchCount('pending'),
         fetchCount('under_review'),
         fetchCount('approved'),
         fetchCount('rejected'),
+        fetchCount(undefined, true),
       ])
 
       setStatusCounts({
@@ -174,6 +181,7 @@ export default function CandidatesPage() {
         under_review: underReview,
         approved,
         rejected,
+        invalid,
       })
     } catch (err) {
       console.error('Failed to fetch status counts:', err)
@@ -188,6 +196,7 @@ export default function CandidatesPage() {
       } else {
         const params = new URLSearchParams()
         if (status) params.set('status', status)
+        if (invalidOnly) params.set('invalid', '1')
         if (search) params.set('search', search)
         if (oversight) params.set('oversight', oversight)
         if (oversightArea) params.set('oversight_area', oversightArea)
@@ -213,6 +222,7 @@ export default function CandidatesPage() {
     })
     if (search) params.set('search', search)
     if (status) params.set('status', status)
+    if (invalidOnly) params.set('invalid', '1')
     if (oversight) params.set('oversight', oversight)
     if (oversightArea) params.set('oversight_area', oversightArea)
 
@@ -227,7 +237,7 @@ export default function CandidatesPage() {
     } finally {
       setLoading(false)
     }
-  }, [search, status, oversight, oversightArea, sort, order, page])
+  }, [search, status, invalidOnly, oversight, oversightArea, sort, order, page])
 
   useEffect(() => {
     fetchCandidates()
@@ -288,36 +298,42 @@ export default function CandidatesPage() {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
         <StatusStatCard
           label="All"
           value={statusCounts.all}
-          active={status === ''}
-          onClick={() => { setStatus(''); setPage(1) }}
+          active={status === '' && !invalidOnly}
+          onClick={() => { setInvalidOnly(false); setStatus(''); setPage(1) }}
         />
         <StatusStatCard
           label={`< ${threshold}`}
           value={statusCounts.pending}
-          active={status === 'pending'}
-          onClick={() => { setStatus('pending'); setPage(1) }}
+          active={status === 'pending' && !invalidOnly}
+          onClick={() => { setInvalidOnly(false); setStatus('pending'); setPage(1) }}
         />
         <StatusStatCard
           label="Under Review"
           value={statusCounts.under_review}
-          active={status === 'under_review'}
-          onClick={() => { setStatus('under_review'); setPage(1) }}
+          active={status === 'under_review' && !invalidOnly}
+          onClick={() => { setInvalidOnly(false); setStatus('under_review'); setPage(1) }}
         />
         <StatusStatCard
           label="Approved"
           value={statusCounts.approved}
-          active={status === 'approved'}
-          onClick={() => { setStatus('approved'); setPage(1) }}
+          active={status === 'approved' && !invalidOnly}
+          onClick={() => { setInvalidOnly(false); setStatus('approved'); setPage(1) }}
         />
         <StatusStatCard
           label="Rejected"
           value={statusCounts.rejected}
-          active={status === 'rejected'}
-          onClick={() => { setStatus('rejected'); setPage(1) }}
+          active={status === 'rejected' && !invalidOnly}
+          onClick={() => { setInvalidOnly(false); setStatus('rejected'); setPage(1) }}
+        />
+        <StatusStatCard
+          label="Invalid Records"
+          value={statusCounts.invalid}
+          active={invalidOnly}
+          onClick={() => { setInvalidOnly(true); setStatus(''); setPage(1) }}
         />
       </div>
 
@@ -331,7 +347,7 @@ export default function CandidatesPage() {
         />
         <select
           value={status}
-          onChange={(e) => { setStatus(e.target.value as CandidateStatus | ''); setPage(1) }}
+          onChange={(e) => { setInvalidOnly(false); setStatus(e.target.value as CandidateStatus | ''); setPage(1) }}
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {STATUS_OPTIONS.map((s) => (
