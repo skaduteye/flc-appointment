@@ -12,7 +12,6 @@ interface Stats {
   approved: number
   rejected: number
   under_review: number
-  disqualified: number
 }
 
 function buildHistogram(candidates: Candidate[]) {
@@ -70,7 +69,7 @@ export default function DashboardPage() {
     approved: candidates.filter((c) => c.status === 'approved').length,
     rejected: candidates.filter((c) => c.status === 'rejected').length,
     under_review: candidates.filter((c) => c.status === 'under_review').length,
-    disqualified: candidates.filter((c) => c.is_disqualified).length,
+
   }
 
   const histogram = buildHistogram(candidates)
@@ -94,7 +93,6 @@ export default function DashboardPage() {
         <StatCard label="Approved" value={stats.approved} color="text-green-600" />
         <StatCard label="Rejected" value={stats.rejected} color="text-red-600" />
         <StatCard label="Under Review" value={stats.under_review} color="text-blue-600" />
-        <StatCard label="Disqualified" value={stats.disqualified} color="text-red-500" />
       </div>
 
       {/* Score histogram */}
@@ -147,9 +145,7 @@ export default function DashboardPage() {
                   <Link href={`/admin/candidates/${c.id}`} className="font-medium text-blue-700 hover:underline">
                     {c.full_name}
                   </Link>
-                  {c.is_disqualified && (
-                    <span className="ml-2 text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">FLAGGED</span>
-                  )}
+
                 </td>
                 <td className="px-6 py-3 text-right font-semibold text-gray-900">{c.total_score}</td>
                 <td className="px-6 py-3 text-center">
@@ -181,9 +177,7 @@ export default function DashboardPage() {
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(c.status)}`}>
                     {c.status.replace('_', ' ')}
                   </span>
-                  {c.is_disqualified && (
-                    <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">FLAGGED</span>
-                  )}
+
                 </div>
               </div>
               <span className="font-bold text-gray-900 text-sm ml-3 shrink-0">{c.total_score}</span>

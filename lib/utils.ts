@@ -13,15 +13,13 @@ export function formatDate(dateString: string) {
   })
 }
 
-export function scoreColor(score: number, isDisqualified: boolean) {
-  if (isDisqualified) return 'text-red-600'
+export function scoreColor(score: number) {
   if (score >= 800) return 'text-green-600'
   if (score >= 400) return 'text-yellow-600'
   return 'text-gray-600'
 }
 
-export function scoreBg(score: number, isDisqualified: boolean) {
-  if (isDisqualified) return 'bg-red-50 border-red-200'
+export function scoreBg(score: number) {
   if (score >= 800) return 'bg-green-50 border-green-200'
   if (score >= 400) return 'bg-yellow-50 border-yellow-200'
   return 'bg-gray-50 border-gray-200'

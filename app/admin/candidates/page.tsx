@@ -38,7 +38,7 @@ async function exportPDF(candidates: Candidate[], status: CandidateStatus | '') 
     startY: 25,
     styles: { fontSize: 7, cellPadding: 1.5 },
     headStyles: { fillColor: [23, 37, 84], textColor: 255 },
-    head: [['Name', 'Surname', 'Gender', 'Phone', 'Oversight', 'Score', 'Disq.', 'Status', 'Submitted']],
+    head: [['Name', 'Surname', 'Gender', 'Phone', 'Oversight', 'Score', 'Status', 'Submitted']],
     body: candidates.map((c) => [
       c.full_name,
       c.surname,
@@ -46,7 +46,6 @@ async function exportPDF(candidates: Candidate[], status: CandidateStatus | '') 
       c.phone_number ?? '',
       c.oversight ?? '',
       c.total_score,
-      c.is_disqualified ? 'Yes' : 'No',
       c.status.replace('_', ' '),
       formatDate(c.created_at),
     ]),
@@ -190,7 +189,6 @@ export default function CandidatesPage() {
             <tr>
               <th className="px-6 py-3 text-left"><SortHeader field="full_name" label="Name" /></th>
               <th className="px-6 py-3 text-right"><SortHeader field="total_score" label="Score" /></th>
-              <th className="px-6 py-3 text-center">Flags</th>
               <th className="px-6 py-3 text-center"><SortHeader field="status" label="Status" /></th>
               <th className="px-6 py-3 text-right"><SortHeader field="created_at" label="Submitted" /></th>
               <th className="px-6 py-3" />
@@ -198,9 +196,9 @@ export default function CandidatesPage() {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-400">Loading…</td></tr>
+              <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">Loading…</td></tr>
             ) : candidates.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-400">No candidates found</td></tr>
+              <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">No candidates found</td></tr>
             ) : candidates.map((c) => (
               <tr key={c.id} className="hover:bg-gray-50">
                 <td className="px-6 py-3">
@@ -209,15 +207,8 @@ export default function CandidatesPage() {
                     <span className="font-medium text-gray-900">{c.full_name}</span>
                   </div>
                 </td>
-                <td className={`px-6 py-3 text-right font-bold ${scoreColor(c.total_score, c.is_disqualified)}`}>
+                <td className={`px-6 py-3 text-right font-bold ${scoreColor(c.total_score)}`}>
                   {c.total_score}
-                </td>
-                <td className="px-6 py-3 text-center">
-                  {c.is_disqualified && (
-                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
-                      FLAGGED
-                    </span>
-                  )}
                 </td>
                 <td className="px-6 py-3 text-center">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor(c.status)}`}>
@@ -258,13 +249,11 @@ export default function CandidatesPage() {
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(c.status)}`}>
                   {c.status.replace('_', ' ')}
                 </span>
-                {c.is_disqualified && (
-                  <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">FLAGGED</span>
-                )}
+
                 <span className="text-xs text-gray-400">{formatDate(c.created_at)}</span>
               </div>
             </div>
-            <span className={`font-bold text-base ml-3 shrink-0 ${scoreColor(c.total_score, c.is_disqualified)}`}>
+            <span className={`font-bold text-base ml-3 shrink-0 ${scoreColor(c.total_score)}`}>
               {c.total_score}
             </span>
           </Link>
