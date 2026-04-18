@@ -49,11 +49,18 @@ export default function CandidateDetailPage() {
 
   useEffect(() => {
     fetch(`/api/candidates/${id}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Server error: ${r.status}`)
+        return r.json()
+      })
       .then((c) => {
         setCandidate(c)
         setNotes(c.admin_notes ?? '')
         setStatus(c.status)
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error('Failed to load candidate:', err)
         setLoading(false)
       })
   }, [id])

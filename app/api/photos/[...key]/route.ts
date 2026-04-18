@@ -18,13 +18,20 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const client = getR2Client()
-  const command = new GetObjectCommand({
-    Bucket: process.env.R2_BUCKET_NAME!,
-    Key: key,
-  })
+  try {
+    const client = getR2Client()
+    const command = new GetObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME!,
+      Key: key,
+    })
 
-  const url = await getSignedUrl(client, command, { expiresIn: 900 }) // 15 min
+    const url = await getSignedUrl(client, command, { expiresIn: 900 }) // 15 min
 
-  return NextResponse.redirect(url, { status: 302 })
+    return NextResponse.redirect(url, { status: 302 })
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Failed to retrieve photo' },
+      { status: 500 }
+    )
+  }
 }

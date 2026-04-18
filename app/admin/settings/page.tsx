@@ -154,8 +154,12 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetch('/api/settings')
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Server error: ${r.status}`)
+        return r.json()
+      })
       .then(setSettings)
+      .catch((err) => console.error('Failed to load settings:', err))
   }, [])
 
   async function save(section: string, patch: Partial<AppSettings>) {

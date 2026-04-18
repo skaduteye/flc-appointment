@@ -99,8 +99,12 @@ function PhotoUpload({ value, onChange, firstName, surname }: {
       fd.append('name', name)
       const res = await fetch('/api/upload/photo', { method: 'POST', body: fd })
       if (!res.ok) {
-        const body = await res.json()
-        throw new Error(body.error ?? 'Upload failed')
+        let errorMsg = 'Upload failed'
+        try {
+          const body = await res.json()
+          errorMsg = body.error ?? errorMsg
+        } catch {}
+        throw new Error(errorMsg)
       }
       const { key } = await res.json()
       setPreview(URL.createObjectURL(file))
@@ -293,8 +297,12 @@ export default function ApplyPage() {
         body: JSON.stringify(form),
       })
       if (!res.ok) {
-        const body = await res.json()
-        throw new Error(body.error ?? 'Submission failed')
+        let errorMsg = 'Submission failed'
+        try {
+          const body = await res.json()
+          errorMsg = body.error ?? errorMsg
+        } catch {}
+        throw new Error(errorMsg)
       }
       router.push('/apply/success')
     } catch (err) {

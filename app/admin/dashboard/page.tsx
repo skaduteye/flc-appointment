@@ -47,9 +47,16 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetch('/api/candidates?limit=200&sort=created_at&order=desc')
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Server error: ${r.status}`)
+        return r.json()
+      })
       .then((d) => {
         setCandidates(d.data ?? [])
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error('Failed to load candidates:', err)
         setLoading(false)
       })
   }, [])
