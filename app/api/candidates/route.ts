@@ -18,8 +18,7 @@ function getAdminClient() {
   )
 }
 
-function resolveAutoStatus(total: number, isDisqualified: boolean, threshold: number): CandidateStatus {
-  if (isDisqualified) return 'under_review'
+function resolveAutoStatus(total: number, threshold: number): CandidateStatus {
   if (total >= threshold) return 'under_review'
   return 'pending'
 }
@@ -60,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   const settings = await getAllSettings()
   const { total, isDisqualified } = calculateScore(body, settings.scoring_weights)
-  const autoStatus = resolveAutoStatus(total, isDisqualified, settings.score_threshold)
+  const autoStatus = resolveAutoStatus(total, settings.score_threshold)
 
   const supabase = getAdminClient()
   const { data, error } = await supabase
@@ -68,7 +67,7 @@ export async function POST(req: NextRequest) {
     .insert({
       ...body,
       total_score: total,
-      is_disqualified: false,
+      is_disqualified: isDisqualified,
       status: autoStatus,
     })
     .select('*')

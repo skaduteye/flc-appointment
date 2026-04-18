@@ -367,7 +367,7 @@ function WeightsEditor({
 
       <WeightGroup title="B — Disqualifiers">
         <div className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
-          Negative values. Any disqualifier also flags the candidate for manual review regardless of score.
+          Negative values used only for scoring. Under Review is now based strictly on score threshold.
         </div>
         {wi('Spiritual / character problem', 'has_spiritual_character_problem')}
         {wi('Known moral problem', 'has_known_moral_problem')}
