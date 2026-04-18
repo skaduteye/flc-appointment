@@ -159,7 +159,7 @@ export default function SettingsPage() {
         return r.json()
       })
       .then(setSettings)
-      .catch(() => {})
+      .catch((err) => console.error('Failed to load settings:', err))
   }, [])
 
   async function save(section: string, patch: Partial<AppSettings>) {

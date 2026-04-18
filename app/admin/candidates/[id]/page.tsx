@@ -59,7 +59,10 @@ export default function CandidateDetailPage() {
         setStatus(c.status)
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch((err) => {
+        console.error('Failed to load candidate:', err)
+        setLoading(false)
+      })
   }, [id])
 
   async function handleSave() {

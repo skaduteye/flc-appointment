@@ -55,7 +55,10 @@ export default function DashboardPage() {
         setCandidates(d.data ?? [])
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch((err) => {
+        console.error('Failed to load candidates:', err)
+        setLoading(false)
+      })
   }, [])
 
   const stats: Stats = {
