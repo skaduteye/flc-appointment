@@ -18,7 +18,7 @@ export async function GET() {
       const text = await res.text()
       console.error('FlashSMS returned non-JSON:', res.status, text.slice(0, 200))
       return NextResponse.json(
-        { error: `FlashSMS returned HTTP ${res.status} (non-JSON)` },
+        { error: `FlashSMS returned HTTP ${res.status} (non-JSON)`, body: text.slice(0, 300), keyLen: key.length, keyStart: key.slice(0, 8) },
         { status: 502 },
       )
     }
