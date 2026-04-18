@@ -70,7 +70,7 @@ export default function BroadcastPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Broadcast SMS</h1>
         <p className="text-gray-500 text-sm mt-1">
@@ -151,12 +151,18 @@ export default function BroadcastPage() {
       </div>
 
       {/* Confirmation + send */}
-      {message.trim() && candidateCount !== null && candidateCount > 0 && (
+      {message.trim() && (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-            <strong>You are about to send {parts} SMS{parts > 1 ? ' parts' : ''} to {candidateCount} candidate{candidateCount !== 1 ? 's' : ''}.</strong>
-            {' '}This will use <strong>{creditsNeeded} credits</strong> and cannot be undone.
-          </div>
+          {candidateCount !== null && candidateCount > 0 ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+              <strong>You are about to send {parts} SMS{parts > 1 ? ' parts' : ''} to {candidateCount} candidate{candidateCount !== 1 ? 's' : ''}.</strong>
+              {' '}This will use <strong>{creditsNeeded} credits</strong> and cannot be undone.
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-500">
+              No candidates in this group yet.
+            </div>
+          )}
 
           <label className="flex items-start gap-3 cursor-pointer">
             <input
@@ -173,10 +179,10 @@ export default function BroadcastPage() {
           <button
             type="button"
             onClick={handleSend}
-            disabled={!confirmed || sending || !message.trim() || (balance !== null && creditsNeeded > balance)}
+            disabled={!confirmed || sending || !message.trim() || !candidateCount}
             className="w-full py-3 rounded-lg bg-blue-700 text-white font-semibold hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {sending ? 'Sending…' : `Send to ${candidateCount} candidate${candidateCount !== 1 ? 's' : ''}`}
+            {sending ? 'Sending…' : `Send to ${candidateCount ?? '…'} candidate${candidateCount !== 1 ? 's' : ''}`}
           </button>
         </div>
       )}

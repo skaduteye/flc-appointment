@@ -191,7 +191,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
         <p className="text-gray-500 text-sm mt-1">
@@ -326,22 +326,22 @@ function Section({
 }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
           <h2 className="font-semibold text-gray-800">{title}</h2>
           <p className="text-gray-500 text-sm mt-0.5">{description}</p>
         </div>
         {extra}
       </div>
       {children}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+      <div className="flex items-center justify-between gap-4 flex-wrap pt-2 border-t border-gray-100">
         <span className={`text-sm font-medium ${savedMsg === 'Saved!' ? 'text-green-600' : 'text-red-600'}`}>
           {savedMsg ?? ''}
         </span>
         <button
           onClick={onSave}
           disabled={saving}
-          className="px-5 py-2 bg-blue-700 text-white text-sm font-semibold rounded-lg hover:bg-blue-800 disabled:opacity-60 transition-colors"
+          className="ml-auto px-5 py-2 bg-blue-700 text-white text-sm font-semibold rounded-lg hover:bg-blue-800 disabled:opacity-60 transition-colors"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
