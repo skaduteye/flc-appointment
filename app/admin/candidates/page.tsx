@@ -171,6 +171,12 @@ export default function CandidatesPage() {
           <p className="text-gray-500 text-sm mt-0.5">{total} total</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href="/admin/candidates/new"
+            className="px-3 py-1.5 rounded-lg bg-blue-700 text-white text-xs font-semibold hover:bg-blue-800 transition-colors uppercase tracking-wide"
+          >
+            New candidate
+          </Link>
           <span className="text-xs text-gray-400 mr-1">Export filtered:</span>
           {(['csv', 'pdf', 'zip'] as const).map((fmt) => (
             <button

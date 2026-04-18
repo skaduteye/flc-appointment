@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendSms, isValidGhanaPhone } from '@/lib/sms'
 import type { CandidateStatus } from '@/lib/types'
+import { requireApiUser } from '@/lib/api-auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 function getAdminClient() {
   return createClient(
@@ -12,7 +14,25 @@ function getAdminClient() {
 
 const BATCH_SIZE = 1000 // FlashSMS max recipients per request
 
+function getClientIp(req: NextRequest): string {
+  const forwarded = req.headers.get('x-forwarded-for')
+  if (forwarded) return forwarded.split(',')[0].trim()
+  return req.headers.get('x-real-ip') ?? 'unknown'
+}
+
 export async function POST(req: NextRequest) {
+  const auth = await requireApiUser(req)
+  if (auth.response) return auth.response
+
+  const ip = getClientIp(req)
+  const smsRate = checkRateLimit(`sms-broadcast:${ip}`, 3, 60_000)
+  if (!smsRate.allowed) {
+    return NextResponse.json(
+      { error: 'Too many broadcast attempts. Please wait and try again.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(smsRate.retryAfterMs / 1000)) } }
+    )
+  }
+
   let body: { message: string; statusFilter?: CandidateStatus | 'all'; campaignName?: string }
   try {
     body = await req.json()
@@ -24,6 +44,14 @@ export async function POST(req: NextRequest) {
 
   if (!message?.trim()) {
     return NextResponse.json({ error: 'message is required' }, { status: 400 })
+  }
+
+  if (message.trim().length > 480) {
+    return NextResponse.json({ error: 'message is too long (max 480 characters)' }, { status: 400 })
+  }
+
+  if (!['all', 'pending', 'under_review', 'approved', 'rejected'].includes(statusFilter)) {
+    return NextResponse.json({ error: 'Invalid statusFilter value' }, { status: 400 })
   }
 
   const supabase = getAdminClient()

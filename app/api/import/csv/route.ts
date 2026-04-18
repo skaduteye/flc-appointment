@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { calculateScore } from '@/lib/scoring'
 import { getAllSettings } from '@/lib/settings'
+import { requireApiUser } from '@/lib/api-auth'
 
 function getAdminClient() {
   return createClient(
@@ -97,6 +98,9 @@ function parseCSV(text: string): string[][] {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireApiUser(req)
+  if (auth.response) return auth.response
+
   let text: string
   try {
     const formData = await req.formData()

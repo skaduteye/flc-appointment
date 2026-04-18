@@ -4,6 +4,7 @@ import { GetObjectCommand } from '@aws-sdk/client-s3'
 import JSZip from 'jszip'
 import { getR2Client } from '@/app/api/upload/photo/route'
 import type { Candidate, CandidateStatus } from '@/lib/types'
+import { requireApiUser } from '@/lib/api-auth'
 
 function getAdminClient() {
   return createClient(
@@ -95,6 +96,9 @@ const CSV_COLUMNS: { label: string; key: keyof Candidate }[] = [
 ]
 
 export async function GET(req: NextRequest) {
+  const auth = await requireApiUser(req)
+  if (auth.response) return auth.response
+
   const supabase = getAdminClient()
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status') as CandidateStatus | null

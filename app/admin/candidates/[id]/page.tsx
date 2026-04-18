@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import type { Candidate, CandidateStatus } from '@/lib/types'
 import { calculateScore } from '@/lib/scoring'
-import { statusColor, formatDate, formatStatus } from '@/lib/utils'
+import { statusColor, formatDate, formatStatus, scoreColor, scoreBg } from '@/lib/utils'
 
 const STATUS_OPTIONS: CandidateStatus[] = ['pending', 'under_review', 'approved', 'rejected']
 
@@ -45,6 +45,7 @@ export default function CandidateDetailPage() {
   const [saving, setSaving] = useState(false)
   const [notes, setNotes] = useState('')
   const [status, setStatus] = useState<CandidateStatus>('pending')
+  const [totalScore, setTotalScore] = useState(0)
   const [saved, setSaved] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -65,6 +66,7 @@ export default function CandidateDetailPage() {
         setCandidate(c)
         setNotes(c.admin_notes ?? '')
         setStatus(c.status)
+        setTotalScore(c.total_score)
         setLoading(false)
       })
       .catch((err) => {
@@ -78,7 +80,7 @@ export default function CandidateDetailPage() {
     await fetch(`/api/candidates/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, admin_notes: notes }),
+      body: JSON.stringify({ status, admin_notes: notes, total_score: totalScore }),
     })
     setSaving(false)
     setSaved(true)
@@ -123,8 +125,8 @@ export default function CandidateDetailPage() {
             <p className="text-gray-400 text-xs mt-1">Submitted {formatDate(candidate.created_at)}</p>
           </div>
         </div>
-        <div className="text-center rounded-xl px-4 py-3 border-2 shrink-0 bg-blue-50 border-blue-200">
-          <div className="text-4xl font-bold text-blue-700">
+        <div className={`text-center rounded-xl px-4 py-3 border-2 shrink-0 ${scoreBg(candidate.total_score)}`}>
+          <div className={`text-4xl font-bold ${scoreColor(candidate.total_score)}`}>
             {candidate.total_score}
           </div>
           <div className="text-xs text-gray-500 mt-0.5">Total Score</div>
@@ -150,7 +152,7 @@ export default function CandidateDetailPage() {
         ))}
         <div className="flex justify-between items-center py-2.5 text-sm font-bold bg-gray-50 -mx-6 px-6">
           <span>Total</span>
-          <span className={candidate.total_score < 700 ? 'text-yellow-700' : 'text-green-700'}>
+          <span className={scoreColor(candidate.total_score)}>
             {candidate.total_score} / 1350
             {candidate.total_score >= 700 ? ' ✓' : ' (700 needed)'}
           </span>
@@ -260,6 +262,16 @@ export default function CandidateDetailPage() {
               <option key={s} value={s}>{formatStatus(s, threshold)}</option>
             ))}
           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Total Score</label>
+          <input
+            type="number"
+            min={0}
+            value={totalScore}
+            onChange={(e) => setTotalScore(Math.max(0, Number(e.target.value) || 0))}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Admin Notes</label>

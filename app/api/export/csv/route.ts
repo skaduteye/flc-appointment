@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { Candidate, CandidateStatus } from '@/lib/types'
+import { requireApiUser } from '@/lib/api-auth'
 
 function getAdminClient() {
   return createClient(
@@ -78,6 +79,9 @@ const COLUMNS: { label: string; key: keyof Candidate }[] = [
 ]
 
 export async function GET(req: NextRequest) {
+  const auth = await requireApiUser(req)
+  if (auth.response) return auth.response
+
   const supabase = getAdminClient()
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status') as CandidateStatus | null

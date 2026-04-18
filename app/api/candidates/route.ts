@@ -8,6 +8,8 @@ import {
   isValidGhanaPhone,
 } from '@/lib/sms'
 import type { CandidateInput, CandidateStatus } from '@/lib/types'
+import { requireApiUser } from '@/lib/api-auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 function getAdminClient() {
   return createClient(
@@ -22,8 +24,23 @@ function resolveAutoStatus(total: number, isDisqualified: boolean, threshold: nu
   return 'pending'
 }
 
+function getClientIp(req: NextRequest): string {
+  const forwarded = req.headers.get('x-forwarded-for')
+  if (forwarded) return forwarded.split(',')[0].trim()
+  return req.headers.get('x-real-ip') ?? 'unknown'
+}
+
 // POST /api/candidates — public submission
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req)
+  const submissionRate = checkRateLimit(`apply:${ip}`, 8, 60_000)
+  if (!submissionRate.allowed) {
+    return NextResponse.json(
+      { error: 'Too many submissions. Please wait and try again.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(submissionRate.retryAfterMs / 1000)) } }
+    )
+  }
+
   let body: CandidateInput
   try {
     body = await req.json()
@@ -33,6 +50,12 @@ export async function POST(req: NextRequest) {
 
   if (!body.full_name?.trim()) {
     return NextResponse.json({ error: 'full_name is required' }, { status: 400 })
+  }
+  if (!body.surname?.trim()) {
+    return NextResponse.json({ error: 'surname is required' }, { status: 400 })
+  }
+  if (!body.phone_number?.trim() || !isValidGhanaPhone(body.phone_number)) {
+    return NextResponse.json({ error: 'A valid Ghana phone_number is required' }, { status: 400 })
   }
 
   const settings = await getAllSettings()
@@ -87,6 +110,9 @@ async function sendNotifications(
 
 // GET /api/candidates — admin only, list with filters
 export async function GET(req: NextRequest) {
+  const auth = await requireApiUser(req)
+  if (auth.response) return auth.response
+
   const supabase = getAdminClient()
   const { searchParams } = new URL(req.url)
 
@@ -103,7 +129,14 @@ export async function GET(req: NextRequest) {
   let query = supabase.from('candidates').select('*', { count: 'exact' })
 
   if (status) query = query.eq('status', status)
-  if (search) query = query.ilike('full_name', `%${search}%`)
+  if (search) {
+    const q = search.replace(/,/g, ' ').trim()
+    if (q) {
+      query = query.or(
+        `full_name.ilike.%${q}%,surname.ilike.%${q}%,phone_number.ilike.%${q}%,oversight.ilike.%${q}%,oversight_area.ilike.%${q}%`
+      )
+    }
+  }
   if (oversight) query = query.eq('oversight', oversight)
   if (oversightArea) query = query.eq('oversight_area', oversightArea)
 

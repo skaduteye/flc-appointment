@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import type { Candidate } from '@/lib/types'
-import { statusColor, formatDate, formatStatus } from '@/lib/utils'
+import { statusColor, formatDate, formatStatus, scoreColor } from '@/lib/utils'
 
 interface Stats {
   total: number
@@ -160,7 +160,7 @@ export default function DashboardPage() {
                   </Link>
 
                 </td>
-                <td className="px-6 py-3 text-right font-semibold text-gray-900">{c.total_score}</td>
+                <td className={`px-6 py-3 text-right font-semibold ${scoreColor(c.total_score)}`}>{c.total_score}</td>
                 <td className="px-6 py-3 text-center">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor(c.status)}`}>
                     {formatStatus(c.status, threshold)}
@@ -193,7 +193,7 @@ export default function DashboardPage() {
 
                 </div>
               </div>
-              <span className="font-bold text-gray-900 text-sm ml-3 shrink-0">{c.total_score}</span>
+              <span className={`font-bold text-sm ml-3 shrink-0 ${scoreColor(c.total_score)}`}>{c.total_score}</span>
             </Link>
           ))}
         </div>

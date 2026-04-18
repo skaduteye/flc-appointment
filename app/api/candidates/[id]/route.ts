@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { calculateScore } from '@/lib/scoring'
 import { sendSms, buildStatusChangeMessage, isValidGhanaPhone } from '@/lib/sms'
 import type { CandidateInput, CandidateStatus } from '@/lib/types'
+import { requireApiUser } from '@/lib/api-auth'
 
 function getAdminClient() {
   return createClient(
@@ -12,6 +13,9 @@ function getAdminClient() {
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireApiUser(_req)
+  if (auth.response) return auth.response
+
   const { id } = await params
   const supabase = getAdminClient()
   const { data, error } = await supabase
@@ -25,13 +29,34 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireApiUser(req)
+  if (auth.response) return auth.response
+
   const { id } = await params
   const supabase = getAdminClient()
-  let body: Partial<CandidateInput & { status: string; admin_notes: string }>
+  let body: Partial<CandidateInput & { status: string; admin_notes: string; total_score: number }>
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  if (
+    body.status !== undefined &&
+    !['pending', 'under_review', 'approved', 'rejected'].includes(body.status)
+  ) {
+    return NextResponse.json({ error: 'Invalid status value' }, { status: 400 })
+  }
+
+  if (body.admin_notes !== undefined && typeof body.admin_notes !== 'string') {
+    return NextResponse.json({ error: 'admin_notes must be a string' }, { status: 400 })
+  }
+
+  if (
+    body.total_score !== undefined &&
+    (!Number.isFinite(body.total_score) || body.total_score < 0)
+  ) {
+    return NextResponse.json({ error: 'total_score must be a non-negative number' }, { status: 400 })
   }
 
   const scoreFields = [
@@ -95,6 +120,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireApiUser(_req)
+  if (auth.response) return auth.response
+
   const { id } = await params
   const supabase = getAdminClient()
   const { error } = await supabase.from('candidates').delete().eq('id', id)

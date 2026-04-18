@@ -19,15 +19,11 @@ export function formatStatus(status: string, threshold: number): string {
 }
 
 export function scoreColor(score: number) {
-  if (score >= 800) return 'text-green-600'
-  if (score >= 400) return 'text-yellow-600'
-  return 'text-gray-600'
+  return score >= 700 ? 'text-green-600' : 'text-red-600'
 }
 
 export function scoreBg(score: number) {
-  if (score >= 800) return 'bg-green-50 border-green-200'
-  if (score >= 400) return 'bg-yellow-50 border-yellow-200'
-  return 'bg-gray-50 border-gray-200'
+  return score >= 700 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
 }
 
 export function statusColor(status: string) {
