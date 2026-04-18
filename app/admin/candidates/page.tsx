@@ -84,11 +84,17 @@ export default function CandidatesPage() {
     if (search) params.set('search', search)
     if (status) params.set('status', status)
 
-    const res = await fetch(`/api/candidates?${params}`)
-    const data = await res.json()
-    setCandidates(data.data ?? [])
-    setTotal(data.count ?? 0)
-    setLoading(false)
+    try {
+      const res = await fetch(`/api/candidates?${params}`)
+      if (!res.ok) throw new Error(`Server error: ${res.status}`)
+      const data = await res.json()
+      setCandidates(data.data ?? [])
+      setTotal(data.count ?? 0)
+    } catch (err) {
+      console.error('Failed to fetch candidates:', err)
+    } finally {
+      setLoading(false)
+    }
   }, [search, status, sort, order, page])
 
   useEffect(() => {

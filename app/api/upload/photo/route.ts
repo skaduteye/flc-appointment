@@ -62,14 +62,21 @@ export async function POST(req: NextRequest) {
 
   const buffer = Buffer.from(await file.arrayBuffer())
 
-  const client = getR2Client()
-  await client.send(new PutObjectCommand({
-    Bucket: process.env.R2_BUCKET_NAME!,
-    Key: key,
-    Body: buffer,
-    ContentType: file.type,
-    ContentLength: buffer.byteLength,
-  }))
+  try {
+    const client = getR2Client()
+    await client.send(new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME!,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type,
+      ContentLength: buffer.byteLength,
+    }))
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Upload failed' },
+      { status: 500 }
+    )
+  }
 
   return NextResponse.json({ key })
 }
